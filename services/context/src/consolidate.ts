@@ -130,152 +130,172 @@ export async function runConsolidation(
   let promoted = 0;
   let quarantined = 0;
   let rejected = 0;
+  let processed = 0;
   const errors: string[] = [];
   if (episodes.length === 0) return { processed: 0, promoted, quarantined, rejected, errors };
 
-  // Only user-authored episodes may be used as source material for L1 facts.
-  // A normal chat writes USER + AGENT episodes, so passing both makes local
-  // extractors unnecessarily ambiguous and can teach them their own answers.
-  const userEpisodes = episodes.filter((episode) => episode.trust === "USER");
-  if (userEpisodes.length === 0) {
-    for (const episode of episodes) {
-      deps.repo.markEpisodeConsolidated(episode.id, episode.rawText.slice(0, 300), options.now);
-    }
-    return { processed: episodes.length, promoted, quarantined, rejected, errors };
+  // Each extraction prompt has one authoritative privacy and sensitivity boundary.
+  // Never let a LOCAL_ONLY episode inform a CLOUD_ALLOWED/PUBLIC candidate, or let
+  // a higher-sensitivity episode influence a lower-sensitivity candidate.
+  const groups = new Map<string, Episode[]>();
+  for (const episode of episodes) {
+    const key = JSON.stringify([
+      episode.projectId,
+      episode.scope,
+      episode.sensitivity,
+      episode.syncClass,
+    ]);
+    const group = groups.get(key) ?? [];
+    group.push(episode);
+    groups.set(key, group);
   }
-  const parsed = parseExtraction(await deps.extractLocal(buildExtractionPrompt(userEpisodes)));
-  if (parsed.error !== null) {
-    errors.push(parsed.error);
-    // Do not acknowledge episodes on invalid model output. They must remain eligible
-    // for a later retry, rather than being permanently lost from L1 extraction.
-    return { processed: 0, promoted, quarantined, rejected, errors };
-  }
-  const episodeById = new Map(userEpisodes.map((ep) => [ep.id, ep]));
+  for (const groupEpisodes of groups.values()) {
+    // Only user-authored episodes may be used as source material for L1 facts.
+    // A normal chat writes USER + AGENT episodes, so passing both makes local
+    // extractors unnecessarily ambiguous and can teach them their own answers.
+    const userEpisodes = groupEpisodes.filter((episode) => episode.trust === "USER");
+    if (userEpisodes.length === 0) {
+      for (const episode of groupEpisodes) {
+        deps.repo.markEpisodeConsolidated(episode.id, episode.rawText.slice(0, 300), options.now);
+      }
+      processed += groupEpisodes.length;
+      continue;
+    }
+    const parsed = parseExtraction(await deps.extractLocal(buildExtractionPrompt(userEpisodes)));
+    if (parsed.error !== null) {
+      errors.push(parsed.error);
+      // Do not acknowledge episodes on invalid model output. They must remain eligible
+      // for a later retry, rather than being permanently lost from L1 extraction.
+      continue;
+    }
+    const episodeById = new Map(userEpisodes.map((ep) => [ep.id, ep]));
 
-  for (const candidate of parsed.candidates) {
-    if (!candidate.worthRemembering) {
-      rejected += 1;
-      continue;
-    }
-    const sourceId =
-      candidate.sourceEpisodeId ??
-      (userEpisodes.length === 1 ? userEpisodes[0]?.id : undefined);
-    if (sourceId === undefined) {
-      rejected += 1;
-      errors.push(
-        "Kandidat tanpa sourceEpisodeId ditolak karena batch berisi lebih dari satu episode.",
-      );
-      continue;
-    }
-    const source = episodeById.get(sourceId);
-    if (source === undefined) {
-      rejected += 1;
-      errors.push(`sourceEpisodeId kandidat tidak ada di batch: ${sourceId}`);
-      continue;
-    }
-    if (source.trust !== "USER") {
-      rejected += 1;
-      errors.push(`Kandidat fakta dari episode non-USER ditolak: ${sourceId}`);
-      continue;
-    }
-    const text = `${candidate.subject} ${candidate.predicate} ${candidate.object}`;
-    if (stripImperativeContent(text).flagged.length > 0) {
-      rejected += 1;
-      continue;
-    }
+    for (const candidate of parsed.candidates) {
+      if (!candidate.worthRemembering) {
+        rejected += 1;
+        continue;
+      }
+      const sourceId =
+        candidate.sourceEpisodeId ??
+        (userEpisodes.length === 1 ? userEpisodes[0]?.id : undefined);
+      if (sourceId === undefined) {
+        rejected += 1;
+        errors.push(
+          "Kandidat tanpa sourceEpisodeId ditolak karena batch berisi lebih dari satu episode.",
+        );
+        continue;
+      }
+      const source = episodeById.get(sourceId);
+      if (source === undefined) {
+        rejected += 1;
+        errors.push(`sourceEpisodeId kandidat tidak ada di batch: ${sourceId}`);
+        continue;
+      }
+      if (source.trust !== "USER") {
+        rejected += 1;
+        errors.push(`Kandidat fakta dari episode non-USER ditolak: ${sourceId}`);
+        continue;
+      }
+      const text = `${candidate.subject} ${candidate.predicate} ${candidate.object}`;
+      if (stripImperativeContent(text).flagged.length > 0) {
+        rejected += 1;
+        continue;
+      }
 
-    const samePredicate = deps.repo
-      .listFacts({
-        scopes: [source.scope],
-        subject: candidate.subject,
-        projectId: source.projectId,
-        // A Project fact must never dedupe or supersede a shared global fact.
-        includeGlobal: false,
-        limit: 100,
-      })
-      // Deduplication and supersession must not cross privacy/sensitivity tiers.
-      // A newly consented CLOUD_ALLOWED fact must not be swallowed by an older
-      // LOCAL_ONLY fact, or invalidate that private fact when the value changes.
-      .filter(
-        (f) =>
-          normalize(f.predicate) === normalize(candidate.predicate) &&
-          f.syncClass === source.syncClass &&
-          f.sensitivity === source.sensitivity,
-      );
-    const duplicate = samePredicate.find(
-      (f) => normalize(f.object) === normalize(candidate.object),
-    );
-    if (duplicate !== undefined) {
-      deps.repo.setSalience(
-        duplicate.id,
-        Math.min(1, Math.max(duplicate.salience, candidate.confidence) + 0.05),
-      );
-      rejected += 1;
-      continue;
-    }
-    const supersedes = samePredicate[0]?.id;
-    const factId: MemoryFactId = makeId("memoryFact");
-    deps.repo.proposeFact({
-      id: factId,
-      proposedText: text,
-      proposedAt: options.now,
-      provenance: {
-        sourceApp: "context:consolidate",
-        ...(source.provenance.sessionId === undefined
-          ? {}
-          : { sessionId: source.provenance.sessionId }),
-        ...(source.provenance.sourceUri === undefined
-          ? {}
-          : { sourceUri: source.provenance.sourceUri }),
-      },
-      trust: "LOCAL_AGENT",
-      scope: source.scope,
-      projectId: source.projectId,
-    });
-    try {
-      deps.repo.promoteFromQuarantine(
-        factId,
-        {
-          id: factId,
+      const samePredicate = deps.repo
+        .listFacts({
+          scopes: [source.scope],
           subject: candidate.subject,
-          predicate: candidate.predicate,
-          object: candidate.object,
-          text,
-          confidence: candidate.confidence,
-          salience: 0.5,
-          sourceEpisodeIds: [source.id],
-          tValid: candidate.tValid ?? source.ts,
-          createdAt: options.now,
-          scope: source.scope,
           projectId: source.projectId,
-          sensitivity: source.sensitivity,
-          syncClass: source.syncClass,
-          trust: "LOCAL_AGENT",
-          provenance: {
-            sourceApp: "context:consolidate",
-            ...(source.provenance.sessionId === undefined
-              ? {}
-              : { sessionId: source.provenance.sessionId }),
-            ...(source.provenance.sourceUri === undefined
-              ? {}
-              : { sourceUri: source.provenance.sourceUri }),
-          },
-        },
-        options.now,
-        supersedes === undefined ? {} : { supersedes },
+          // A Project fact must never dedupe or supersede a shared global fact.
+          includeGlobal: false,
+          limit: 100,
+        })
+        // Deduplication and supersession must not cross privacy/sensitivity tiers.
+        // A newly consented CLOUD_ALLOWED fact must not be swallowed by an older
+        // LOCAL_ONLY fact, or invalidate that private fact when the value changes.
+        .filter(
+          (f) =>
+            normalize(f.predicate) === normalize(candidate.predicate) &&
+            f.syncClass === source.syncClass &&
+            f.sensitivity === source.sensitivity,
+        );
+      const duplicate = samePredicate.find(
+        (f) => normalize(f.object) === normalize(candidate.object),
       );
-      promoted += 1;
-    } catch (err) {
-      if (err instanceof ContextError) {
-        quarantined += 1;
-        errors.push(err.message);
-      } else throw err;
+      if (duplicate !== undefined) {
+        deps.repo.setSalience(
+          duplicate.id,
+          Math.min(1, Math.max(duplicate.salience, candidate.confidence) + 0.05),
+        );
+        rejected += 1;
+        continue;
+      }
+      const supersedes = samePredicate[0]?.id;
+      const factId: MemoryFactId = makeId("memoryFact");
+      deps.repo.proposeFact({
+        id: factId,
+        proposedText: text,
+        proposedAt: options.now,
+        provenance: {
+          sourceApp: "context:consolidate",
+          ...(source.provenance.sessionId === undefined
+            ? {}
+            : { sessionId: source.provenance.sessionId }),
+          ...(source.provenance.sourceUri === undefined
+            ? {}
+            : { sourceUri: source.provenance.sourceUri }),
+        },
+        trust: "LOCAL_AGENT",
+        scope: source.scope,
+        projectId: source.projectId,
+      });
+      try {
+        deps.repo.promoteFromQuarantine(
+          factId,
+          {
+            id: factId,
+            subject: candidate.subject,
+            predicate: candidate.predicate,
+            object: candidate.object,
+            text,
+            confidence: candidate.confidence,
+            salience: 0.5,
+            sourceEpisodeIds: [source.id],
+            tValid: candidate.tValid ?? source.ts,
+            createdAt: options.now,
+            scope: source.scope,
+            projectId: source.projectId,
+            sensitivity: source.sensitivity,
+            syncClass: source.syncClass,
+            trust: "LOCAL_AGENT",
+            provenance: {
+              sourceApp: "context:consolidate",
+              ...(source.provenance.sessionId === undefined
+                ? {}
+                : { sessionId: source.provenance.sessionId }),
+              ...(source.provenance.sourceUri === undefined
+                ? {}
+                : { sourceUri: source.provenance.sourceUri }),
+            },
+          },
+          options.now,
+          supersedes === undefined ? {} : { supersedes },
+        );
+        promoted += 1;
+      } catch (err) {
+        if (err instanceof ContextError) {
+          quarantined += 1;
+          errors.push(err.message);
+        } else throw err;
+      }
     }
-  }
 
-  for (const ep of episodes) {
-    const summary = parsed.summaries.get(ep.id) ?? ep.rawText.slice(0, 300);
-    deps.repo.markEpisodeConsolidated(ep.id, summary, options.now);
+    for (const ep of groupEpisodes) {
+      const summary = parsed.summaries.get(ep.id) ?? ep.rawText.slice(0, 300);
+      deps.repo.markEpisodeConsolidated(ep.id, summary, options.now);
+    }
+    processed += groupEpisodes.length;
   }
-  return { processed: episodes.length, promoted, quarantined, rejected, errors };
+  return { processed, promoted, quarantined, rejected, errors };
 }
