@@ -75,9 +75,18 @@ function parseExtraction(raw: string): {
   summaries: Map<string, string>;
   error: string | null;
 } {
+  // On-device models may wrap otherwise-valid JSON in one Markdown fence
+  // or prepend a <think> block. Strip only these bounded wrappers.
+  let payload = raw.trim();
+  if (payload.startsWith("<think>")) {
+    const close = payload.indexOf("</think>");
+    if (close !== -1) payload = payload.slice(close + "</think>".length).trim();
+  }
+  const fenced = /^```(?:json)?\s*\n([\s\S]*?)\n```$/i.exec(payload);
+  if (fenced?.[1] !== undefined) payload = fenced[1].trim();
   let json: unknown;
   try {
-    json = JSON.parse(raw);
+    json = JSON.parse(payload);
   } catch {
     return {
       candidates: [],
