@@ -370,7 +370,18 @@ describe("automatic memory local-only safety", () => {
         payload: agentPayload,
       });
       expect(first.statusCode).toBe(201);
-      await vi.waitFor(() => expect(extractLocal).toHaveBeenCalledTimes(1));
+      await vi.waitFor(async () => {
+        expect(extractLocal).toHaveBeenCalledTimes(1);
+        const status = await autoApp.inject({
+          method: "GET",
+          url: "/v1/memory/status?projectId=prj_alpha",
+        });
+        expect(status.json()).toMatchObject({
+          lastAttempt: "failed",
+          lastFailureCodes: ["LOCAL_MODEL_ERROR"],
+        });
+        expect(status.body).not.toContain("sensitive model output");
+      });
       expect(repo.listFacts({ projectId: "prj_alpha" as never })).toHaveLength(0);
       expect(
         repo.listEpisodes({ projectId: "prj_alpha" as never, onlyUnconsolidated: true }),
@@ -388,6 +399,16 @@ describe("automatic memory local-only safety", () => {
       expect(repo.listFacts({ projectId: "prj_alpha" as never })[0]?.syncClass).toBe(
         "LOCAL_ONLY",
       );
+      await vi.waitFor(async () => {
+        const status = await autoApp.inject({
+          method: "GET",
+          url: "/v1/memory/status?projectId=prj_alpha",
+        });
+        expect(status.json()).toMatchObject({
+          lastAttempt: "complete",
+          lastFailureCodes: [],
+        });
+      });
 
       const cloud = await autoApp.inject({
         method: "POST",
