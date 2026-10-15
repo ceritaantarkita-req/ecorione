@@ -41,11 +41,13 @@ describe("Local-to-cloud context consent contract", () => {
 
   it("shows clear user consent, resets it after each message and on route/session changes", () => {
     const page = readFileSync("apps/ai/app/page.tsx", "utf8");
-    expect(page).toContain("Izinkan pesan Local berikutnya disimpan sebagai Cloud Allowed");
-    expect(page).toContain("Tidak berlaku untuk riwayat lama");
+    const controls = readFileSync("apps/ai/app/ChatPageSections.tsx", "utf8");
+    expect(controls).toContain("Izinkan pesan Local berikutnya disimpan sebagai Cloud Allowed");
+    expect(controls).toContain("Tidak berlaku untuk riwayat lama");
     expect(page).toContain("setCloudShare(false)");
     expect(page).toContain('target === "local" && cloudShare && attachments.length === 0');
     expect(page).toContain("cloudShare: true");
-    expect(page).toContain("setCloudShare(event.target.checked)");
+    expect(controls).toContain("onChange(event.target.checked)");
+    expect(page).toContain("onChange={setCloudShare}");
   });
 });
