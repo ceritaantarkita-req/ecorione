@@ -47,6 +47,7 @@ import {
 } from "./AiProviderConnectDialog";
 import {
   ChatProviderModelSelectors,
+  LocalCloudShareConsent,
   FileIcon,
   FolderIcon,
   MemoryPanel,
@@ -965,20 +966,11 @@ export default function ChatPage() {
             </p>
 
             {target === "local" ? (
-              <label className="ai-cloud-share-consent">
-                <input
-                  type="checkbox"
-                  checked={cloudShare}
-                  onChange={(event) => setCloudShare(event.target.checked)}
-                  disabled={sending || preparingAttachments || attachments.length > 0}
-                />
-                <span>
-                  Izinkan pesan Local berikutnya disimpan sebagai Cloud Allowed agar konteksnya
-                  bisa dipakai OpenRouter saat berganti model. Pada giliran ini, Memory Local
-                  Only tidak ikut dipakai. Tidak berlaku untuk riwayat lama. Jangan aktifkan
-                  untuk informasi rahasia.
-                </span>
-              </label>
+              <LocalCloudShareConsent
+                checked={cloudShare}
+                disabled={sending || preparingAttachments || attachments.length > 0}
+                onChange={setCloudShare}
+              />
             ) : null}
 
             <textarea
