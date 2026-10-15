@@ -368,7 +368,7 @@ describe("chat", () => {
     const sessionId = "sess_cloud_consent" as never;
     for (let i = 0; i < 2; i += 1) {
       contextPool.intercept({
-        path: "/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=${i === 0 ? "1" : "0"}",
+        path: `/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=${i === 0 ? "1" : "0"}`,
         method: "GET",
       }).reply(200, CORE_MEMORY);
       contextPool.intercept({ path: "/v1/retrieve", method: "POST" })
@@ -382,7 +382,7 @@ describe("chat", () => {
         method: "GET",
       }).reply(200, { episodes: [] });
       contextPool.intercept({
-        path: "/v1/artifacts?scope=personal&maxSensitivity=INTERNAL&limit=5&hostedEligible=${i === 0 ? "1" : "0"}",
+        path: `/v1/artifacts?scope=personal&maxSensitivity=INTERNAL&limit=5&hostedEligible=${i === 0 ? "1" : "0"}`,
         method: "GET",
       }).reply(200, { pointers: [] });
     }
