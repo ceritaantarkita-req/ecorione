@@ -104,6 +104,8 @@ export default function ChatPage() {
   const [historyFeedback, setHistoryFeedback] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [target, setTarget] = useState<ChatTarget>("local");
+  // Per-turn consent only. Never silently broaden LOCAL_ONLY history on a model switch.
+  const [cloudShare, setCloudShare] = useState(false);
   const modelRouting = useChatModelRouting();
   const providerOnboarding = useAiProviderOnboarding(
     modelRouting.onboardingProviders,
@@ -202,6 +204,7 @@ export default function ChatPage() {
         }
         const nextSession = explicitSession ?? storedSession ?? makeSessionId();
 
+        setCloudShare(false);
         setProjectId(nextProject);
         setRequestedSessionId(explicitSession);
         setSessionId(nextSession);
@@ -453,6 +456,9 @@ export default function ChatPage() {
           projectId,
           message: trimmed,
           target,
+          ...(target === "local" && cloudShare && attachments.length === 0
+            ? { cloudShare: true }
+            : {}),
         }),
       });
       const body: unknown = await res.json().catch(() => undefined);
@@ -487,6 +493,7 @@ export default function ChatPage() {
       ]);
       return false;
     } finally {
+      setCloudShare(false);
       sendInFlightRef.current = false;
       setSending(false);
     }
@@ -698,6 +705,7 @@ export default function ChatPage() {
     setHistoryTruncated(false);
     setHistoryFeedback(null);
     setMemoryFeedback(null);
+    setCloudShare(false);
     routeLockedRef.current = false;
     setTarget(defaultTarget);
     try {
@@ -744,6 +752,7 @@ export default function ChatPage() {
 
   async function handleProviderSwitch(source: ChatProviderSource): Promise<void> {
     if (sending || preparingAttachments) return;
+    setCloudShare(false);
     const nextTarget = await modelRouting.switchProvider(source);
     if (nextTarget !== null) setTarget(nextTarget);
   }
@@ -954,6 +963,22 @@ export default function ChatPage() {
                   ? `Pesan berikutnya: Local \u00b7 ${localRuntimeStatus?.configuredModel ?? "model lokal"}. Model dan biaya dicatat per balasan.`
                   : `Pesan berikutnya: Cloud \u00b7 ${hostedRouteLabel}. Riwayat Local-only tidak dikirim ke Cloud; model dan biaya dicatat per balasan.`}
             </p>
+
+            {target === "local" ? (
+              <label className="ai-cloud-share-consent">
+                <input
+                  type="checkbox"
+                  checked={cloudShare}
+                  onChange={(event) => setCloudShare(event.target.checked)}
+                  disabled={sending || preparingAttachments || attachments.length > 0}
+                />
+                <span>
+                  Izinkan pesan Local berikutnya disimpan sebagai Cloud Allowed agar
+                  konteksnya bisa dipakai OpenRouter saat berganti model.
+                  Tidak berlaku untuk riwayat lama. Jangan aktifkan untuk informasi rahasia.
+                </span>
+              </label>
+            ) : null}
 
             <textarea
               className="ai-composer__field"
