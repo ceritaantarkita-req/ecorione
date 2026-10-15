@@ -63,7 +63,7 @@ Acceptance to run before merge:
 
 ## QA checklist
 
-1. Run `pnpm exec vitest run services/context/src/consolidate.test.ts services/context/src/http.test.ts services/context/src/project-context.test.ts`.
+1. Run `pnpm exec vitest run services/context/src/consolidate.test.ts services/context/src/http.test.ts services/context/src/project-memory-persistence.test.ts services/hub/src/project-context.test.ts`.
 2. Run typecheck and lint plus full CI from branch / PR; verify no regressions.
 3. Start local runtime with Connect and a reachable local model; create Project `QA-Memory`.
 4. Ask the agent to remember a unique, harmless test token (no secrets) and wait for async consolidation. Confirm the Context fact exists under the Project (not only Historical Ledger).
@@ -115,3 +115,16 @@ Deterministic regression coverage added in `services/context/src/consolidate.tes
 Exact-head automated verification **before this documentation/temporary-workflow cleanup**: commit `044713036582b7fa3ffbc0c1a37be07ec4322316` — CI #2959 **SUCCESS** (verify including format, lint, typecheck, tests, real-process acceptance, naming, secret-history), Product Eval #2198 **SUCCESS**, PCS-06 Browser #567 **SUCCESS**, MCP HTTPS #1376 **SUCCESS**. A temporary read-only diagnostic workflow was used to derive exact Prettier changes and is removed by the documentation cleanup commit; it is **not** part of the target PR deliverable.
 
 Remaining acceptance: real operator-controlled Windows/local-model new-session recall, cross-provider eligible context, sibling Project exclusion, consent egress, and restart/persistence checks, as defined above. Automated checks do **not** establish actual laptop database contents, model input or new-session accuracy. PR stays draft and must **not** merge until those checks are independently observed and the final cleanup commit's gates are green.
+
+## 2026-10-15: file-backed restart regression and extractor-outage containment
+
+At the reviewed code head `63e648a5c54f6f112ac58b6c6187df99d98307f8`:
+
+- Added `services/context/src/project-memory-persistence.test.ts`. It writes two harmless Project episodes with different sync classes to a **temporary on-disk SQLite DB**, waits for the local extractor to create durable facts, closes the Context server/DB, opens the same DB through a fresh Context server, and verifies L1 recall while the new chat session has no episodes.
+- Negative checks confirm that the sibling Project cannot retrieve either fact, hosted-eligible retrieval cannot return LOCAL_ONLY facts, and a separately consented CLOUD_ALLOWED fact remains eligible. Post-restart per-Project counts and the expected reset of ephemeral worker telemetry are also asserted.
+- Local extractor promise rejection is now handled **per privacy/sensitivity group**, leaving only that group's episodes pending while other groups may complete; returned errors do not include the model exception payload. A dedicated regression test verifies this behavior.
+- These tests use a deterministic mocked local extractor and a disposable database. They are more realistic than in-memory tests for persistence, but **not proof of real-model semantic recall, cross-provider execution, or Windows laptop runtime behavior**.
+
+GitHub gates for that code head: CI **#2963 SUCCESS** (format, lint, typecheck, tests, real-process acceptance, release/security gates, production build, naming and secret-history); Product Eval **#2202 SUCCESS**; PCS-06 Browser **#571 SUCCESS**; MCP External HTTPS **#1380 SUCCESS**.
+
+The remaining operator-controlled acceptance A–F above is unchanged. To run the deterministic persistence test from a clean checkout of PR #467, use `pnpm exec vitest run services/context/src/project-memory-persistence.test.ts services/context/src/consolidate.test.ts`. This test is safe for the actual laptop's existing Context DB because it uses a newly created temporary SQLite file; it **does not** inspect or validate the existing laptop DB. Real provider/model and local restart acceptance must still be performed separately and recorded before merge. No paid hosted canaries are necessary for the deterministic tests.
