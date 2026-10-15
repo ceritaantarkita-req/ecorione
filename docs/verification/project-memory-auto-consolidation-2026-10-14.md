@@ -27,6 +27,15 @@ In local ECORIONE, the user wrote a memorable marker in `QA-Audit`, received the
 - This preserves the explicit restriction in `docs/api-fase1.md`: no silent hosted-data egress and no unexpected extra hosted API spend. Cloud-eligible derived facts can be recalled by hosted chat only **after** local extraction succeeds and their `syncClass` passes hosted eligibility.
 - Background failures now log only a Project ID, error type, or bounded count, never exception payloads that may include model output. Raw episodes stay eligible for retries.
 
+## 2026-10-15: local-runtime investigation and Project diagnostics
+
+- `services/context/src/consolidate.ts` accepts strictly JSON-compatible local extractor replies with a single Markdown JSON fence or one leading `<think>...</think>` block. Malformed or free-form replies remain failures and eligible for retry; no hosted fallback was enabled.
+- `GET /v1/memory/status?projectId=...` exposes per-Project counts only: pending/processed Episodes, active facts, Local Only/Cloud Allowed facts, plus **ephemeral** queued/processing/lastAttempt state. It never returns episode contents or fact text.
+- The same-origin `/api/projects/memory-status` route **first validates Project ownership via Hub** for the active Workspace. The Projects view displays a read-only status panel with a Refresh control.
+- **Important:** `lastAttempt` is in-memory runtime telemetry, not durable after a Context restart. Pending and saved counts come from the persistent Context DB. The panel is an explanation aid, **not** proof that a particular model has retrieved a particular fact.
+- Follow-up browser acceptance: refresh the Project panel after a Local → Local test. If Pending remains nonzero or lastAttempt=failed, investigate the local extractor. If Saved > 0 and the same local chat cannot retrieve it, investigate retrieval/relevance. If facts are Local Only, an OpenRouter chat must not see them.
+- All changes stay in draft PR #467 until CI, local-model runtime verification, Project isolation and restart acceptance are documented.
+
 ## Limits / acceptance
 
 - This is **asynchronous and model-dependent**, not guaranteed immediate recall. Do not claim closure until local/CI tests and browser acceptance show a saved fact is recalled after a new conversation.
