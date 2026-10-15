@@ -113,8 +113,7 @@ export function ProjectMemoryStatus({
               Cloud Allowed: <strong>{snapshot.cloudEligibleFacts}</strong>
             </span>
           </div>
-          {snapshot.lastAttempt === "failed" &&
-          (snapshot.lastFailureCodes?.length ?? 0) > 0 ? (
+          {snapshot.lastAttempt === "failed" && (snapshot.lastFailureCodes?.length ?? 0) > 0 ? (
             <p className={styles.memoryStatusHint}>
               Penyebab terakhir:{" "}
               {snapshot.lastFailureCodes

@@ -132,7 +132,7 @@ describe("runConsolidation", () => {
     const extractLocal = vi.fn().mockResolvedValue(
       JSON.stringify([
         {
-          sourceEpisodeId: "epi_PRIVATE_MARKER_339",
+          sourceEpisodeId: "epi_private_marker_339",
           subject: "kode uji",
           predicate: "adalah",
           object: "PRIVAT-339",
@@ -143,7 +143,7 @@ describe("runConsolidation", () => {
     );
     const result = await runConsolidation({ repo, extractLocal }, { now: NOW });
     expect(result.errors).toEqual(["SOURCE_EPISODE_UNKNOWN"]);
-    expect(JSON.stringify(result)).not.toContain("PRIVATE_MARKER_339");
+    expect(JSON.stringify(result)).not.toContain("private_marker_339");
     expect(JSON.stringify(result)).not.toContain("PRIVAT-339");
     expect(repo.listFacts()).toHaveLength(0);
   });

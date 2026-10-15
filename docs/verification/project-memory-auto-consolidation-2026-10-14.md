@@ -128,3 +128,42 @@ At the reviewed code head `63e648a5c54f6f112ac58b6c6187df99d98307f8`:
 GitHub gates for that code head: CI **#2963 SUCCESS** (format, lint, typecheck, tests, real-process acceptance, release/security gates, production build, naming and secret-history); Product Eval **#2202 SUCCESS**; PCS-06 Browser **#571 SUCCESS**; MCP External HTTPS **#1380 SUCCESS**.
 
 The remaining operator-controlled acceptance A–F above is unchanged. To run the deterministic persistence test from a clean checkout of PR #467, use `pnpm exec vitest run services/context/src/project-memory-persistence.test.ts services/context/src/consolidate.test.ts`. This test is safe for the actual laptop's existing Context DB because it uses a newly created temporary SQLite file; it **does not** inspect or validate the existing laptop DB. Real provider/model and local restart acceptance must still be performed separately and recorded before merge. No paid hosted canaries are necessary for the deterministic tests.
+
+## 2026-10-15: real-Qwen runtime failure and privacy-safe diagnostics
+
+The operator's **actual Windows QA-Memory runtime** reproduced a new-chat recall
+failure for the harmless test data `LANGIT-839` / `Raka`. The status panel
+reported pending episodes and a failed consolidation; the Context log showed
+`Auto memory consolidation incomplete` with `errorCount: 1`. This proves
+the extractor did not complete successfully, but **does not identify which
+failure path** occurred and does not justify attributing it to bad JSON yet.
+
+PR #467 now returns allowlisted, privacy-safe `ConsolidationFailureCode` values
+instead of dynamic error messages or model-supplied episode IDs. Automatic
+consolidation logs `failureCodes` and the read-only Project status endpoint
+returns an **ephemeral** `lastFailureCodes` array. The Project Memory UI maps
+these codes to short Indonesian explanations. The codes are:
+
+- `LOCAL_MODEL_ERROR`: local extractor call failed (including timeouts);
+- `INVALID_JSON`: extractor reply was not valid JSON;
+- `INVALID_SCHEMA`: JSON did not match expected facts/summaries shape;
+- `SOURCE_EPISODE_REQUIRED`, `SOURCE_EPISODE_UNKNOWN`, or
+  `SOURCE_EPISODE_UNTRUSTED`: invalid provenance mapping;
+- `PROMOTION_REJECTED`: fact promotion failed validation;
+- `UNEXPECTED_FAILURE`: uncaught internal failure.
+
+The diagnostic fields contain only fixed code strings and counts, **never raw
+chat, model response, exception message, secret, or episode identifier**.
+On a subsequent successful run the last failure codes clear; on Context
+restart they reset to unknown/empty. The persistent episode/fact counts
+remain untouched. Existing retry-on-new-assistant-reply behavior is unchanged,
+and no hosted extractor is added.
+
+Before testing on Windows: wait for exact-head GitHub gates, perform a
+fast-forward-only pull after checking the working tree, then restart the
+operator-controlled engine **without deleting or overwriting the SQLite DB**.
+The prior pending episodes remain candidates for retry; send a harmless local
+follow-up in the same QA-Memory Project to trigger consolidation and refresh
+the Project Memory panel. Record only its status, pending/saved counts and
+safe failure codes. Inspect and fix the real observed category before
+declaring recall successful. **Do not merge PR #467 until this local gate passes.**
