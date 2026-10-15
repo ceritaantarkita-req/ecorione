@@ -174,7 +174,10 @@ export async function chat(
   const target = options.target ?? req.target ?? "hosted";
   const hosted = target === "hosted";
   const brainGrounded = req.contextConstraint?.source === "brain";
-  const syncClass = options.syncClass ?? (hosted ? "CLOUD_ALLOWED" : "LOCAL_ONLY");
+  // Local turns remain private unless the user explicitly opts in for THIS message.
+  // Previously stored LOCAL_ONLY episodes are never reclassified or sent to hosted.
+  const syncClass =
+    options.syncClass ?? (hosted || req.cloudShare === true ? "CLOUD_ALLOWED" : "LOCAL_ONLY");
   const operationId: OperationId = makeId("operation");
   const actionRequest: ActionRequest = {
     operationId,
