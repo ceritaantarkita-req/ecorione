@@ -975,7 +975,8 @@ export default function ChatPage() {
                 <span>
                   Izinkan pesan Local berikutnya disimpan sebagai Cloud Allowed agar
                   konteksnya bisa dipakai OpenRouter saat berganti model.
-                  Tidak berlaku untuk riwayat lama. Jangan aktifkan untuk informasi rahasia.
+                  Pada giliran ini, Memory Local Only tidak ikut dipakai. Tidak berlaku
+                  untuk riwayat lama. Jangan aktifkan untuk informasi rahasia.
                 </span>
               </label>
             ) : null}
