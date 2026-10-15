@@ -364,6 +364,47 @@ describe("chat", () => {
     expect(deps.history.getSession(sessionId)?.syncClass).toBe("LOCAL_ONLY");
   });
 
+  it("marks only explicitly consented Local messages CLOUD_ALLOWED and never reclassifies older turns", async () => {
+    const sessionId = "sess_cloud_consent" as never;
+    for (let i = 0; i < 2; i += 1) {
+      contextPool.intercept({
+        path: "/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=0",
+        method: "GET",
+      }).reply(200, CORE_MEMORY);
+      contextPool.intercept({ path: "/v1/retrieve", method: "POST" })
+        .reply(200, { hits: [], diagnostics: {} });
+      contextPool.intercept({
+        path: `/v1/episodes?sessionId=${sessionId}&projectId=prj_personal&limit=6&hostedEligible=0`,
+        method: "GET",
+      }).reply(200, { episodes: [] });
+      contextPool.intercept({
+        path: "/v1/artifacts?scope=personal&maxSensitivity=INTERNAL&limit=5&hostedEligible=0",
+        method: "GET",
+      }).reply(200, { pointers: [] });
+    }
+    const observed: string[] = [];
+    contextPool.intercept({ path: "/v1/episodes", method: "POST" }).reply(201, (opts) => {
+      const body = JSON.parse(String(opts.body)) as { syncClass: string };
+      observed.push(body.syncClass);
+      return { id: "epi" };
+    }).times(4);
+    connectPool.intercept({ path: "/v1/complete", method: "POST" }).reply(200, {
+      reply: "ok", model: "local", responseModel: "local",
+      cacheHit: false, usage: USAGE, cost: cost(), routeReason: "local",
+    }).times(2);
+    rndPool.intercept({ path: "/v1/traces", method: "POST" }).reply(201, {}).times(2);
+    await chat(deps, chatRequest({
+      sessionId, target: "local", cloudShare: true, message: "Boleh untuk cloud",
+    }), NOW);
+    await chat(deps, chatRequest({
+      sessionId, target: "local", message: "Rahasia lokal",
+    }), "2026-10-15T00:02:00.000Z" as Timestamp);
+    expect(observed).toEqual([
+      "CLOUD_ALLOWED", "CLOUD_ALLOWED", "LOCAL_ONLY", "LOCAL_ONLY",
+    ]);
+    expect(deps.history.getSession(sessionId)?.syncClass).toBe("LOCAL_ONLY");
+  });
+
   it("authority deny stops hosted chat before Context or Connect egress", async () => {
     const deniedProject = deps.projects.create(
       {
