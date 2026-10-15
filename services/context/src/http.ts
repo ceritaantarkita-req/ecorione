@@ -253,10 +253,7 @@ export function buildContextServer(
   // Owner authorization belongs to the Hub/Next boundary. This internal-only
   // endpoint exposes counts and ephemeral worker state, never fact or episode text.
   app.get("/v1/memory/status", async (req) => {
-    const q = parseOrBadRequest(
-      z.object({ projectId: ProjectIdSchema }),
-      req.query,
-    );
+    const q = parseOrBadRequest(z.object({ projectId: ProjectIdSchema }), req.query);
     return {
       projectId: q.projectId,
       ...repo.projectMemoryCounts(q.projectId),
