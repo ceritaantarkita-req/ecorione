@@ -31,7 +31,11 @@ export function ChatRouteStatus({
     : target === "local"
       ? `Pesan berikutnya: Local · ${localModel ?? "model lokal"}. Model dan biaya dicatat per balasan.`
       : `Pesan berikutnya: Cloud · ${hostedLabel}. Riwayat Local-only tidak dikirim ke Cloud; model dan biaya dicatat per balasan.`;
-  return <p className="ai-route-status" role="status">{text}</p>;
+  return (
+    <p className="ai-route-status" role="status">
+      {text}
+    </p>
+  );
 }
 
 /** Explicit one-turn consent. Local-only content remains private by default. */
@@ -54,9 +58,8 @@ export function LocalCloudShareConsent({
       />
       <span>
         Izinkan pesan Local berikutnya disimpan sebagai Cloud Allowed agar konteksnya bisa
-        dipakai OpenRouter saat berganti model. Pada giliran ini, Memory Local Only tidak
-        ikut dipakai. Tidak berlaku untuk riwayat lama. Jangan aktifkan untuk informasi
-        rahasia.
+        dipakai OpenRouter saat berganti model. Pada giliran ini, Memory Local Only tidak ikut
+        dipakai. Tidak berlaku untuk riwayat lama. Jangan aktifkan untuk informasi rahasia.
       </span>
     </label>
   );
