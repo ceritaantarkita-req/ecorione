@@ -173,6 +173,9 @@ export async function chat(
   const projectId = resolved.project.id;
   const target = options.target ?? req.target ?? "hosted";
   const hosted = target === "hosted";
+  // A consented local answer will itself become cloud-eligible. Assemble it only
+  // from data that hosted models are permitted to see; never launder LOCAL_ONLY.
+  const cloudContext = hosted || req.cloudShare === true;
   const brainGrounded = req.contextConstraint?.source === "brain";
   // Local turns remain private unless the user explicitly opts in for THIS message.
   // Previously stored LOCAL_ONLY episodes are never reclassified or sent to hosted.
@@ -279,7 +282,7 @@ export async function chat(
     ? { blocks: [] }
     : await callContext<CoreMemory>(
         deps,
-        `/v1/core-memory?scope=${scope}&projectId=${encodeURIComponent(projectId)}&maxSensitivity=${max}&hostedEligible=${hosted ? "1" : "0"}`,
+        `/v1/core-memory?scope=${scope}&projectId=${encodeURIComponent(projectId)}&maxSensitivity=${max}&hostedEligible=${cloudContext ? "1" : "0"}`,
         { signal: options.signal },
       );
   const retrieved = await callContext<RetrieveResponse>(deps, "/v1/retrieve", {
@@ -288,7 +291,7 @@ export async function chat(
       query: req.message,
       scopes: [req.scope],
       maxSensitivity: req.maxSensitivity,
-      hostedEligibleOnly: hosted,
+      hostedEligibleOnly: cloudContext,
       now,
       projectId,
       ...(req.contextConstraint === undefined
@@ -302,14 +305,14 @@ export async function chat(
   });
   const episodesRes = await callContext<ListEpisodesResponse>(
     deps,
-    `/v1/episodes?sessionId=${encodeURIComponent(req.sessionId)}&projectId=${encodeURIComponent(projectId)}&limit=${String(EPISODE_LIMIT)}&hostedEligible=${hosted ? "1" : "0"}`,
+    `/v1/episodes?sessionId=${encodeURIComponent(req.sessionId)}&projectId=${encodeURIComponent(projectId)}&limit=${String(EPISODE_LIMIT)}&hostedEligible=${cloudContext ? "1" : "0"}`,
     { signal: options.signal },
   );
   const artifactsRes: ListArtifactsResponse = brainGrounded
     ? { pointers: [] }
     : await callContext<ListArtifactsResponse>(
         deps,
-        `/v1/artifacts?scope=${scope}&maxSensitivity=${max}&limit=${String(ARTIFACT_LIMIT)}&hostedEligible=${hosted ? "1" : "0"}`,
+        `/v1/artifacts?scope=${scope}&maxSensitivity=${max}&limit=${String(ARTIFACT_LIMIT)}&hostedEligible=${cloudContext ? "1" : "0"}`,
         { signal: options.signal },
       );
 
