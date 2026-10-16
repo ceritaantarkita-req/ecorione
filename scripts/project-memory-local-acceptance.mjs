@@ -273,6 +273,25 @@ try {
     markers,
   );
   await settled(project.id);
+  injectFailure = true;
+  await chat("Catatan uji: warna sampul laporan adalah ungu.");
+  const failed = await settled(project.id);
+  assert(failed.pendingEpisodes > 0);
+  assert(failed.lastFailureCodes.includes("INVALID_JSON"));
+  const retried = await json(`${contextUrl}/v1/consolidate/run`, {
+    projectId: project.id,
+    now: now(),
+  });
+  record("M10_DIAGNOSTIC", {
+    failureCodes: retried.errors,
+    pendingEpisodes: repo.projectMemoryCounts(project.id).pendingEpisodes,
+  });
+  assert.equal(retried.errors.length, 0);
+  assert.equal(repo.projectMemoryCounts(project.id).pendingEpisodes, 0);
+  record("M10", {
+    status: "PASS",
+    boundary: "injected invalid JSON followed by real local extraction",
+  });
   if (secondModel) {
     const connectPort = connectApp.server.address().port;
     await hubApp.close();
@@ -286,21 +305,6 @@ try {
     );
     await settled(project.id);
   } else record("M06", { status: "PENDING", reason: "second installed model not supplied" });
-  injectFailure = true;
-  await chat("Catatan uji: warna sampul laporan adalah ungu.");
-  const failed = await settled(project.id);
-  assert(failed.pendingEpisodes > 0);
-  assert(failed.lastFailureCodes.includes("INVALID_JSON"));
-  const retried = await json(`${contextUrl}/v1/consolidate/run`, {
-    projectId: project.id,
-    now: now(),
-  });
-  assert.equal(retried.errors.length, 0);
-  assert.equal(repo.projectMemoryCounts(project.id).pendingEpisodes, 0);
-  record("M10", {
-    status: "PASS",
-    boundary: "injected invalid JSON followed by real local extraction",
-  });
 } finally {
   await hubApp?.close();
   await stopContext();

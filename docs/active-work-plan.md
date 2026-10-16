@@ -1,5 +1,13 @@
 # ECORIONE — Active Work Plan
 
+## Operator-authorized active task — 2026-10-15
+
+Project Memory repair/acceptance on existing draft PR #467 takes precedence for this
+task. Finish bounded Context/Hub fixes, deterministic regression gates and isolated
+real local-model acceptance; update the PR and leave merge to the operator.
+Read [the memory evidence](verification/project-memory-auto-consolidation-2026-10-14.md)
+for PASS/FAIL/PENDING details. The Session 12D queue below is preserved, not expanded.
+
 Last updated: **2026-10-04**
 
 Status: **SESSION 12D NATIVE GOOGLE DRIVE CLOSURE ACTIVE / 12A–12C MERGED / #448 ON MAIN / REPOSITORY+MOCK ACCEPTANCE CLOSED / REAL LOCAL GOOGLE ACCEPTANCE PENDING / SUMOPOD RETIRED AS ACTIVE STAGING**

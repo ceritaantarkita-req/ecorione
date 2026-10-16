@@ -26,6 +26,10 @@ Historical verification is intentionally preserved even when it contains an olde
 
 ## Read these first
 
+**2026-10-15 active operator task:** [Project Memory repair and acceptance](verification/project-memory-auto-consolidation-2026-10-14.md),
+draft PR #467. Current-state/work-plan overrides distinguish this scope from the
+unchanged Session 12D checkpoint below.
+
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current repository/runtime truth and deferred boundaries.
 2. **[active-work-plan.md](active-work-plan.md)** — current queue and explicit Session 12/local-first acceptance boundary.
 3. **[ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md)** — accepted and fulfilled Session 4E/4F provider-model product contract.

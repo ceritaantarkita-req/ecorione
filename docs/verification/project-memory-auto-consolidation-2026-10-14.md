@@ -1,5 +1,9 @@
 # Project memory cross-session — implementation checkpoint (2026-10-14)
 
+**Latest:** see the 2026-10-15 independent read-only audit and isolated real-model
+acceptance section at the end. Earlier failures and screenshots below are historical
+evidence, not a replacement for the latest measured boundary.
+
 ## Reported symptom
 
 In local ECORIONE, the user wrote a memorable marker in `QA-Audit`, received the expected answer in the same conversation, but a new conversation under the same Project did not recall it. The Memory sidebar also showed no derived memory.
@@ -167,3 +171,129 @@ follow-up in the same QA-Memory Project to trigger consolidation and refresh
 the Project Memory panel. Record only its status, pending/saved counts and
 safe failure codes. Inspect and fix the real observed category before
 declaring recall successful. **Do not merge PR #467 until this local gate passes.**
+
+## 2026-10-15: independent storage audit, recall repair and real local acceptance
+
+Implementation code: `3cb708d4e53bf1fc3a5a168b82d9cdc0ae2f97ae`, existing
+`fix/context-automatic-consolidation-20261014` branch, draft PR #467. No merge.
+
+### Evidence and root causes
+
+- Read-only SQLite inspection of the operator's QA-Memory Project independently
+  confirmed **18 processed / 0 pending episodes and 4 active LOCAL_ONLY facts**.
+  Three relevant facts contained all three operator-supplied test values. Their
+  source episodes were USER-authored and matched Project, scope, sensitivity and
+  sync class; provenance was `context:consolidate`. The fourth fact was unrelated.
+  No user database was edited, reset, rebuilt or deleted by the audit.
+- Running the existing retriever against that read-only DB found three facts for
+  the exact code, one fact for the person/responsibility question, and three for
+  the explicit code/PIC/deadline question. Assembly retained the expected values.
+  A paraphrase with no overlapping terms returned **zero lexical/vector hits**.
+  Hosted-eligible and sibling-Project requests returned zero private hits.
+  Thus the stored values are present; the historical person-question failure
+  cannot be attributed conclusively to storage or model behavior at its original
+  timestamp. The paraphrase retrieval failure is directly reproduced.
+- A real synthetic Qwen extraction returned valid JSON but omitted the deadline.
+  Saved counts alone therefore do not prove complete extraction. The extraction
+  prompt now requests each explicit fact and gives the complete required JSON
+  shape, including a separate `object`; it forbids inferring facts from questions.
+- Candidate source-mapping or promotion errors formerly acknowledged the entire
+  privacy group anyway. Failed groups now remain retryable; already-promoted
+  valid facts deduplicate on retry. A related rebuild loop checked `processed=0`
+  before checking errors, potentially accepting an empty failed projection.
+  It now fails before replacing live L1. Regression tests preserve live facts.
+- A successful explicit Project consolidation retry now clears stale status
+  failure codes, matching automatic-retry behavior.
+
+### Bounded retrieval change
+
+Ordinary Hub chat opts into `projectFallback`. Only when lexical/vector retrieval
+returns nothing, Context selects authorized, active **current-Project L1** facts
+ranked by salience × confidence × recency, under existing k (default 8) and
+assembly token budgets. Hits are honestly labeled `matchedBy: ["project"]`.
+Global memory is not included in this fallback. Scope, sensitivity, sync class,
+Project, invalidation and Brain constraints remain fail-closed. Brain-grounded
+chat and API callers that do not opt in retain their original behavior.
+
+This is **not semantic/vector search** and does not guarantee arbitrary paraphrase
+recall in a large Project or when a lexical distractor already matched. Existing
+vector support was inspected; there is no query-embedding path in ordinary chat
+and the installed model inventory did not contain an embedding model. No embedding
+service, hosted fallback, model download or dependency was introduced.
+
+### Real-model acceptance boundary
+
+`scripts/project-memory-local-acceptance.mjs` uses synthetic data only, isolated
+Hub/RnD/Connect services, and the real Context production entrypoint in an owned
+child process. Every chat gets a new session. It checks actual Connect input,
+model answers, L1 provenance and privacy, and restarts only its own Context child
+with the same SQLite file, verifying a changed PID. Original runtime data is never
+passed to the harness. Raw evidence stays in ignored `data/memory-acceptance-*`.
+
+Installed identities observed from Ollama:
+
+- Qwen `qwen3.5:9b`, digest `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`.
+- Hermes `hermes3:latest`, digest `4f6b83f30b62bc3d0cf9be09266db222805ee815c8fd7d8b38f863f655be78b7`.
+
+The measured production-entrypoint run uses existing process-local controls:
+`ECORIONE_LOCAL_MAX_TOKENS=768`, `ECORIONE_LOCAL_TEMPERATURE=0`, and
+`ECORIONE_LOCAL_REASONING_EFFORT=none`. The production **60-second** extraction
+and local chat deadlines remain unchanged. These settings were not persisted in
+the user's Settings or environment files.
+
+Preserved failures: an initial local chat returned 502; a Qwen run omitted a
+value despite schema-valid output; a later production-entrypoint extraction hit
+`LOCAL_MODEL_ERROR` under the unbounded default output settings. Hermes recalled
+all three values correctly but did not reliably complete a subsequent extraction
+retry (one observed response omitted required `object`). These failures remain
+local evidence and are not relabeled PASS. The primary-extractor retry case uses
+Qwen; cross-model Hermes acceptance is specifically recall, not universal
+extractor certification.
+
+| Case | Result | Observed boundary |
+|---|---|---|
+| M01 automatic extraction | PASS | Real Qwen stored all three synthetic values in two valid, source-linked L1 triples |
+| M02 exact recall | PASS | New-session answer and actual Connect input contained the expected values |
+| M03 paraphrase recall | PASS | No-marker paraphrase retrieved Project L1 and Qwen answered PIC/deadline correctly |
+| M04 multi-fact recall | PASS | Code, responsible person and date relationships manually checked in synthetic L1 and answers |
+| M05 cross-session | PASS | Every request used a new session; episodic summaries were empty |
+| M06 cross-model local | PASS | Hermes answered using the same saved facts; no re-seeding |
+| M07 Project isolation | PASS | Sibling request had zero recalled facts, no private marker in actual model input/answer |
+| M08 privacy boundary | PASS, bounded | Real Context hosted-eligible retrieval excluded LOCAL_ONLY; deterministic Hub egress/ownership tests passed; no paid hosted call |
+| M09 restart persistence | PASS | New Context process/PID reopened the same SQLite DB; Qwen recalled all values |
+| M10 failure/retry | PASS with Qwen | Injected invalid JSON preserved pending episodes; explicit real Qwen retry returned no failure codes and pending=0; Hermes failure preserved |
+
+Final run completed all M01–M10 assertions successfully on 2026-10-15; completion
+was reviewed on 2026-10-16. Private evidence: `data/memory-live-primary-retry.log`
+and `data/memory-acceptance-s0H9yK/`. This run tests primary Qwen extraction/retry
+before switching to Hermes for cross-model recall. It does not hide or overwrite
+the earlier unsuccessful Hermes extraction runs.
+
+Repeat with installed models only:
+
+```powershell
+$env:ECORIONE_LOCAL_MAX_TOKENS='768'
+$env:ECORIONE_LOCAL_TEMPERATURE='0'
+$env:ECORIONE_LOCAL_REASONING_EFFORT='none'
+node --import tsx scripts/project-memory-local-acceptance.mjs qwen3.5:9b hermes3:latest
+```
+
+### Automated verification and remaining scope
+
+- **PASS:** 377 tests in 72 files covering Context/consolidation/file persistence,
+  Hub chat/assembly/ownership/privacy, Project API routes, shared schema and
+  context assembly. Final focused repair checks: **58 tests / 4 files PASS**.
+- **PASS:** repository TypeScript typecheck, ESLint and Prettier. ESLint retains
+  the existing non-failing Next pages-directory warning.
+- **PASS:** production build in a temporary source snapshot, preserving the live
+  Ai app's `.next` directory. The subsequent prompt-string-only edit is covered by
+  exact-head CI build/typecheck.
+- Code head `3cb708d4...`: **CI #2969 SUCCESS**, Product Eval, MCP External HTTPS,
+  and PCS-06 Browser **SUCCESS**. CI includes full repository checks and build.
+  Evidence/harness documentation follow-up requires its own latest-head checks.
+
+This proves bounded Windows/local acceptance on isolated synthetic state. A full
+restart of the operator's active engine, original-project browser acceptance,
+paid hosted inference, and merge to main were not performed. Saved status is still
+not a guarantee of complete model extraction or semantic relevance. Persistent
+model-format/latency failures remain operator-visible and retryable.

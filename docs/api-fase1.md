@@ -92,9 +92,15 @@ file DB ini.
 - `PUT /v1/core-memory/:label` — body `{ description, value, readOnly?, now }` → 200 `CoreMemoryBlock`
 - `POST /v1/retrieve` — body `RetrievalQuery`-ish: `{ query, scopes, k?, maxSensitivity?, now }`
   → 200 `{ hits: RetrievalHit[], diagnostics: RetrievalDiagnostics }`
-  (embedding query **tidak** dikirim di Fase 1 — retrieval jalan leksikal saja lewat
-  BM25/FTS5; jalur vektor aktif begitu ada layanan embedding, itu bukan blocker untuk
-  loop inti karena `ContextRetriever` sudah sah jalan tanpa `queryEmbedding`).
+  (embedding query **tidak** dikirim di Fase 1 — pencarian query memakai BM25/FTS5).
+  Ordinary Hub chat mengirim `projectFallback: true`: jika pencarian leksikal/vektor
+  kosong, Context dapat mengembalikan L1 aktif **milik Project itu saja**, diurutkan
+  salience × confidence × recency dan dibatasi k/budget assembly yang sama.
+  `matchedBy: ["project"]` membedakannya dari kecocokan query. Default API tetap
+  false; Brain dengan constraint tidak memakai fallback. Scope, sensitivity,
+  syncClass, invalidation, dan Project isolation tetap diterapkan sebelum ranking.
+  Ini cadangan konteks Project yang terbatas, **bukan semantic search**: fakta lama
+  di luar top-k atau parafrasa yang cocok dengan distraktor tetap dapat terlewat.
 - `GET /v1/artifacts?scope=personal&limit=20` → `{ pointers: ArtifactPointer[] }`
 - `POST /v1/consolidate/run` — body `{ limit?: number, projectId?: ProjectId, now: string }` → 200
   `{ processed: number, promoted: number, quarantined: number, rejected: number, errors: string[] }`.
@@ -132,7 +138,8 @@ lainnya→400.
      jalan pintas melewati karantina: proposal singgah di tabel `quarantine` dulu
      (baris 1), baru dipromosikan di baris ini setelah lolos pemeriksaan imperatif.
 3. `repo.markEpisodeConsolidated(id, summary, now)` hanya setelah hasil ekstraksi
-   valid untuk batch tersebut; episode dengan ekstraksi gagal tetap menunggu retry.
+   valid untuk kelompok privacy tersebut, termasuk pemetaan sumber/promosi. Kelompok
+   gagal tetap menunggu retry; fakta yang sudah valid dideduplikasi saat retry.
    Balasan agent tidak dipromosikan menjadi fakta USER.
 4. Dalam runtime Context, penulisan episode balasan assistant yang mempunyai
    `projectId` memicu konsolidasi asinkron terbatas pada Project tersebut setelah

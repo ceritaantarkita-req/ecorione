@@ -1,5 +1,13 @@
 # ECORIONE — Execution Progress
 
+## Project Memory operator task — 2026-10-15
+
+Draft PR #467 is the active authorized memory repair/acceptance scope. The original
+user DB is read-only during audit; real-model tests use isolated synthetic databases.
+Current results and remaining gates are maintained in the
+[memory verification record](verification/project-memory-auto-consolidation-2026-10-14.md).
+The earlier Session 12D/staging milestones below retain their original boundaries.
+
 Last updated: **2026-10-04**
 
 Status: **CURRENT SUMMARY / SESSION 12D REPOSITORY+MOCK GREEN / SUMOPOD ACTIVE-STAGING ROLE RETIRED / REAL LOCAL GOOGLE OAUTH+PICKER ACCEPTANCE NEXT**

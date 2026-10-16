@@ -1,5 +1,14 @@
 # ECORIONE — Current State & Next Steps
 
+## Operator-authorized override — 2026-10-15
+
+Current implementation: Project Memory root-cause repair and real local acceptance
+on draft PR #467, branch `fix/context-automatic-consolidation-20261014`.
+See [the memory verification record](verification/project-memory-auto-consolidation-2026-10-14.md)
+for measured storage, retrieval, retry, privacy and model acceptance boundaries.
+Session 12D remains at its prior boundary below. No merge, remote staging, paid
+hosted canary, or mutation/restart of the user's original database is authorized here.
+
 Last updated: **2026-10-04**
 
 Status: **CURRENT / SESSION 12D NATIVE GOOGLE DRIVE CLOSURE ACTIVE / 12A–12C MERGED / #448 CURRENT-MAIN SUPPORT / 12D REPOSITORY+MOCK CLOSED / REAL LOCAL GOOGLE ACCEPTANCE PENDING / SUMOPOD ACTIVE-STAGING ROLE RETIRED / DR-2 + PRODUCTION DEFERRED**
