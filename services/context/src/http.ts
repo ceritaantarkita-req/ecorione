@@ -195,12 +195,43 @@ export function buildContextServer(
   // Only the local extractor may derive durable L1 facts. Serialize scheduled and
   // operator-triggered jobs to avoid processing the same episodes concurrently.
   let consolidationTail: Promise<void> = Promise.resolve();
+  // Ephemeral, owner-checked performance counters only. Never retain prompts,
+  // model output, source IDs or provider exception text in diagnostics.
+  const lastAttemptDurationMs = new Map<ProjectId, number>();
+  const lastExtractionDurationMs = new Map<ProjectId, number>();
+  const lastExtractionPromptBytes = new Map<ProjectId, number>();
   const runSerialized = (opts: ConsolidateOptions) => {
-    if (options.extractLocal === undefined) {
+    const originalExtractor = options.extractLocal;
+    if (originalExtractor === undefined) {
       throw new BadRequestError("Context local extractor belum dikonfigurasi.");
     }
-    const deps: ConsolidateDeps = { repo, extractLocal: options.extractLocal };
-    const task = consolidationTail.then(() => runConsolidation(deps, opts));
+    const task = consolidationTail.then(async () => {
+      const started = performance.now();
+      const deps: ConsolidateDeps = {
+        repo,
+        extractLocal: async (prompt) => {
+          const extractStarted = performance.now();
+          try {
+            return await originalExtractor(prompt);
+          } finally {
+            if (opts.projectId !== undefined) {
+              lastExtractionDurationMs.set(
+                opts.projectId,
+                Math.round(performance.now() - extractStarted),
+              );
+              lastExtractionPromptBytes.set(opts.projectId, Buffer.byteLength(prompt, "utf8"));
+            }
+          }
+        },
+      };
+      try {
+        return await runConsolidation(deps, opts);
+      } finally {
+        if (opts.projectId !== undefined) {
+          lastAttemptDurationMs.set(opts.projectId, Math.round(performance.now() - started));
+        }
+      }
+    });
     consolidationTail = task.then(
       () => undefined,
       () => undefined,
@@ -268,6 +299,9 @@ export function buildContextServer(
       queued: pendingProjects.has(q.projectId),
       lastAttempt: lastOutcome.get(q.projectId) ?? "unknown",
       lastFailureCodes: lastFailureCodes.get(q.projectId) ?? [],
+      lastAttemptDurationMs: lastAttemptDurationMs.get(q.projectId) ?? null,
+      lastExtractionDurationMs: lastExtractionDurationMs.get(q.projectId) ?? null,
+      lastExtractionPromptBytes: lastExtractionPromptBytes.get(q.projectId) ?? null,
     };
   });
 
