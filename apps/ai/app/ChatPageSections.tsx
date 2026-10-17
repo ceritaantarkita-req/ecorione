@@ -6,6 +6,65 @@ import type {
   ChatProviderSource,
 } from "../lib/chat-model-routing";
 
+/** Provider-status copy stays shared regardless of chat model implementation. */
+export function ChatRouteStatus({
+  ready,
+  target,
+  localMessage,
+  localModel,
+  hostedBlocked,
+  hostedLabel,
+}: {
+  ready: boolean;
+  target: ChatTarget;
+  localMessage: string | undefined;
+  localModel: string | undefined;
+  hostedBlocked: boolean;
+  hostedLabel: string;
+}) {
+  const text = !ready
+    ? target === "local"
+      ? (localMessage ?? "Local AI · Checking connection…")
+      : hostedBlocked
+        ? "Model OpenRouter yang dipilih tidak lagi tersedia untuk Cloud. Refresh katalog atau pilih model lain."
+        : "Hosted AI belum aktif. Gunakan + Tambah AI di pilihan Provider / Source."
+    : target === "local"
+      ? `Pesan berikutnya: Local · ${localModel ?? "model lokal"}. Model dan biaya dicatat per balasan.`
+      : `Pesan berikutnya: Cloud · ${hostedLabel}. Riwayat Local-only tidak dikirim ke Cloud; model dan biaya dicatat per balasan.`;
+  return (
+    <p className="ai-route-status" role="status">
+      {text}
+    </p>
+  );
+}
+
+/** Explicit one-turn consent. Local-only content remains private by default. */
+export function LocalCloudShareConsent({
+  checked,
+  disabled,
+  onChange,
+}: {
+  checked: boolean;
+  disabled: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="ai-cloud-share-consent">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        disabled={disabled}
+      />
+      <span>
+        Izinkan pesan Local berikutnya disimpan sebagai Cloud Allowed agar konteksnya bisa
+        dipakai OpenRouter saat berganti model. Pada giliran ini, Memory Local Only tidak ikut
+        dipakai. Tidak berlaku untuk riwayat lama. Jangan aktifkan untuk informasi rahasia.
+      </span>
+    </label>
+  );
+}
+
 function formatUsd(value: number): string {
   return `$${value.toFixed(4)}`;
 }

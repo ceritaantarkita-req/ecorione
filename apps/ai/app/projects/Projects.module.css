@@ -673,3 +673,52 @@
     gap: 2px;
   }
 }
+
+/* Project-owned memory diagnostics: counts only, never exposed raw episode content. */
+.memoryStatus {
+  margin: 22px 0;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.memoryStatusHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.memoryStatusHeader h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.memoryStatusHeader p,
+.memoryStatusHint {
+  margin: 5px 0 10px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.memoryStatusState {
+  margin: 10px 0;
+  font-size: 12px;
+}
+
+.memoryStatusCounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.memoryStatusCounts span {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 11px;
+}
+
+.memoryStatusCounts strong {
+  font-variant-numeric: tabular-nums;
+}

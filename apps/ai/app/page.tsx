@@ -47,6 +47,8 @@ import {
 } from "./AiProviderConnectDialog";
 import {
   ChatProviderModelSelectors,
+  ChatRouteStatus,
+  LocalCloudShareConsent,
   FileIcon,
   FolderIcon,
   MemoryPanel,
@@ -104,6 +106,8 @@ export default function ChatPage() {
   const [historyFeedback, setHistoryFeedback] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [target, setTarget] = useState<ChatTarget>("local");
+  // Per-turn consent only. Never silently broaden LOCAL_ONLY history on a model switch.
+  const [cloudShare, setCloudShare] = useState(false);
   const modelRouting = useChatModelRouting();
   const providerOnboarding = useAiProviderOnboarding(
     modelRouting.onboardingProviders,
@@ -202,6 +206,7 @@ export default function ChatPage() {
         }
         const nextSession = explicitSession ?? storedSession ?? makeSessionId();
 
+        setCloudShare(false);
         setProjectId(nextProject);
         setRequestedSessionId(explicitSession);
         setSessionId(nextSession);
@@ -453,6 +458,9 @@ export default function ChatPage() {
           projectId,
           message: trimmed,
           target,
+          ...(target === "local" && cloudShare && attachments.length === 0
+            ? { cloudShare: true }
+            : {}),
         }),
       });
       const body: unknown = await res.json().catch(() => undefined);
@@ -487,6 +495,7 @@ export default function ChatPage() {
       ]);
       return false;
     } finally {
+      setCloudShare(false);
       sendInFlightRef.current = false;
       setSending(false);
     }
@@ -698,6 +707,7 @@ export default function ChatPage() {
     setHistoryTruncated(false);
     setHistoryFeedback(null);
     setMemoryFeedback(null);
+    setCloudShare(false);
     routeLockedRef.current = false;
     setTarget(defaultTarget);
     try {
@@ -744,6 +754,7 @@ export default function ChatPage() {
 
   async function handleProviderSwitch(source: ChatProviderSource): Promise<void> {
     if (sending || preparingAttachments) return;
+    setCloudShare(false);
     const nextTarget = await modelRouting.switchProvider(source);
     if (nextTarget !== null) setTarget(nextTarget);
   }
@@ -943,17 +954,22 @@ export default function ChatPage() {
                 {modelRouting.feedback.message}
               </p>
             ) : null}
-            <p className="ai-route-status" role="status">
-              {!routeReady
-                ? target === "local"
-                  ? (localRuntimeStatus?.message ?? "Local AI \u00b7 Checking connection\u2026")
-                  : hostedBlockedByOpenRouterPreference
-                    ? "Model OpenRouter yang dipilih tidak lagi tersedia untuk Cloud. Refresh katalog atau pilih model lain."
-                    : "Hosted AI belum aktif. Gunakan + Tambah AI di pilihan Provider / Source."
-                : target === "local"
-                  ? `Pesan berikutnya: Local \u00b7 ${localRuntimeStatus?.configuredModel ?? "model lokal"}. Model dan biaya dicatat per balasan.`
-                  : `Pesan berikutnya: Cloud \u00b7 ${hostedRouteLabel}. Riwayat Local-only tidak dikirim ke Cloud; model dan biaya dicatat per balasan.`}
-            </p>
+            <ChatRouteStatus
+              ready={routeReady}
+              target={target}
+              localMessage={localRuntimeStatus?.message}
+              localModel={localRuntimeStatus?.configuredModel}
+              hostedBlocked={hostedBlockedByOpenRouterPreference}
+              hostedLabel={hostedRouteLabel}
+            />
+
+            {target === "local" ? (
+              <LocalCloudShareConsent
+                checked={cloudShare}
+                disabled={sending || preparingAttachments || attachments.length > 0}
+                onChange={setCloudShare}
+              />
+            ) : null}
 
             <textarea
               className="ai-composer__field"

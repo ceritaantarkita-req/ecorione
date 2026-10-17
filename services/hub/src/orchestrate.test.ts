@@ -98,7 +98,7 @@ function mockContextBeforeConnect(): void {
     .reply(200, { hits: [], diagnostics: {} });
   contextPool
     .intercept({
-      path: "/v1/episodes?sessionId=sess_abc&projectId=prj_personal&limit=6&hostedEligible=1",
+      path: "/v1/episodes?sessionId=sess_abc&projectId=prj_personal&scope=personal&maxSensitivity=INTERNAL&limit=6&hostedEligible=1",
       method: "GET",
     })
     .reply(200, { episodes: [] });
@@ -194,7 +194,7 @@ describe("chat", () => {
       });
       contextPool
         .intercept({
-          path: `/v1/episodes?sessionId=sess_route_switch001&projectId=prj_personal&limit=6&hostedEligible=${hostedEligible}`,
+          path: `/v1/episodes?sessionId=sess_route_switch001&projectId=prj_personal&scope=personal&maxSensitivity=INTERNAL&limit=6&hostedEligible=${hostedEligible}`,
           method: "GET",
         })
         .reply(200, { episodes: [] });
@@ -260,6 +260,183 @@ describe("chat", () => {
       }),
     ).toThrow(/tidak tersedia/);
   });
+  it("keeps Project settings across Local → Hosted model switching while filtering local-only history", async () => {
+    db.raw
+      .prepare(
+        "UPDATE projects SET name=?, description=?, instruction=? WHERE id='prj_personal'",
+      )
+      .run(
+        "Ecorione QA",
+        "Platform riset dan analisis",
+        "Bahas konsep dan konten secara konsisten.",
+      );
+    const sessionId = "sess_project_switch" as never;
+    const requests = [
+      { target: "local" as const, hostedEligible: "0" as const },
+      { target: "hosted" as const, hostedEligible: "1" as const },
+    ];
+    for (const req of requests) {
+      contextPool
+        .intercept({
+          path: `/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=${req.hostedEligible}`,
+          method: "GET",
+        })
+        .reply(200, CORE_MEMORY);
+      contextPool
+        .intercept({ path: "/v1/retrieve", method: "POST" })
+        .reply(200, { hits: [], diagnostics: {} });
+      contextPool
+        .intercept({
+          path: `/v1/episodes?sessionId=${sessionId}&projectId=prj_personal&scope=personal&maxSensitivity=INTERNAL&limit=6&hostedEligible=${req.hostedEligible}`,
+          method: "GET",
+        })
+        .reply(
+          200,
+          req.target === "local"
+            ? {
+                episodes: [
+                  {
+                    id: "epi_local_only",
+                    ts: NOW,
+                    rawText: "rahasia hanya untuk model lokal",
+                    summary: null,
+                    provenance: { sourceApp: "ai", sessionId },
+                  },
+                ],
+              }
+            : { episodes: [] },
+        );
+      contextPool
+        .intercept({
+          path: `/v1/artifacts?scope=personal&maxSensitivity=INTERNAL&limit=5&hostedEligible=${req.hostedEligible}`,
+          method: "GET",
+        })
+        .reply(200, { pointers: [] });
+    }
+    contextPool
+      .intercept({ path: "/v1/episodes", method: "POST" })
+      .reply(201, { id: "epi" })
+      .times(4);
+    let count = 0;
+    connectPool
+      .intercept({ path: "/v1/complete", method: "POST" })
+      .reply(200, (opts) => {
+        const data = JSON.parse(String(opts.body)) as {
+          target: string;
+          dynamicText: string;
+          prefix: { systemPrompt: string };
+        };
+        count += 1;
+        expect(data.dynamicText).toContain("Ecorione QA");
+        expect(data.dynamicText).toContain("Platform riset dan analisis");
+        expect(data.dynamicText).toContain("Bahas konsep dan konten secara konsisten.");
+        expect(data.prefix.systemPrompt).not.toContain("Ecorione QA");
+        expect(data.dynamicText).toContain("<project_settings>");
+        if (data.target === "hosted") {
+          expect(data.dynamicText).not.toContain("rahasia hanya untuk model lokal");
+        } else {
+          expect(data.dynamicText).toContain("rahasia hanya untuk model lokal");
+        }
+        return {
+          reply: count === 1 ? "Jawaban lokal" : "Jawaban cloud",
+          model: "qa-model",
+          responseModel: "qa-model",
+          cacheHit: false,
+          usage: USAGE,
+          cost: cost(),
+          routeReason: data.target,
+        };
+      })
+      .times(2);
+    rndPool.intercept({ path: "/v1/traces", method: "POST" }).reply(201, {}).times(2);
+    const local = await chat(
+      deps,
+      chatRequest({ sessionId, target: "local", message: "Mulai Project" }),
+      NOW,
+    );
+    const hosted = await chat(
+      deps,
+      chatRequest({ sessionId, target: "hosted", message: "Lanjut Project" }),
+      "2026-10-15T00:02:00.000Z" as Timestamp,
+    );
+    expect(local.reply).toBe("Jawaban lokal");
+    expect(hosted.reply).toBe("Jawaban cloud");
+    expect(deps.history.getSession(sessionId)?.syncClass).toBe("LOCAL_ONLY");
+  });
+
+  it("marks only explicitly consented Local messages CLOUD_ALLOWED and never reclassifies older turns", async () => {
+    const sessionId = "sess_cloud_consent" as never;
+    for (let i = 0; i < 2; i += 1) {
+      contextPool
+        .intercept({
+          path: `/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=${i === 0 ? "1" : "0"}`,
+          method: "GET",
+        })
+        .reply(200, CORE_MEMORY);
+      contextPool.intercept({ path: "/v1/retrieve", method: "POST" }).reply(200, (opts) => {
+        const body = JSON.parse(String(opts.body)) as { hostedEligibleOnly: boolean };
+        expect(body.hostedEligibleOnly).toBe(i === 0);
+        expect(JSON.parse(String(opts.body)).projectFallback).toBe(true);
+        return { hits: [], diagnostics: {} };
+      });
+      contextPool
+        .intercept({
+          path: `/v1/episodes?sessionId=${sessionId}&projectId=prj_personal&scope=personal&maxSensitivity=INTERNAL&limit=6&hostedEligible=${i === 0 ? "1" : "0"}`,
+          method: "GET",
+        })
+        .reply(200, { episodes: [] });
+      contextPool
+        .intercept({
+          path: `/v1/artifacts?scope=personal&maxSensitivity=INTERNAL&limit=5&hostedEligible=${i === 0 ? "1" : "0"}`,
+          method: "GET",
+        })
+        .reply(200, { pointers: [] });
+    }
+    const observed: string[] = [];
+    contextPool
+      .intercept({ path: "/v1/episodes", method: "POST" })
+      .reply(201, (opts) => {
+        const body = JSON.parse(String(opts.body)) as { syncClass: string };
+        observed.push(body.syncClass);
+        return { id: "epi" };
+      })
+      .times(4);
+    connectPool
+      .intercept({ path: "/v1/complete", method: "POST" })
+      .reply(200, {
+        reply: "ok",
+        model: "local",
+        responseModel: "local",
+        cacheHit: false,
+        usage: USAGE,
+        cost: cost(),
+        routeReason: "local",
+      })
+      .times(2);
+    rndPool.intercept({ path: "/v1/traces", method: "POST" }).reply(201, {}).times(2);
+    await chat(
+      deps,
+      chatRequest({
+        sessionId,
+        target: "local",
+        cloudShare: true,
+        message: "Boleh untuk cloud",
+      }),
+      NOW,
+    );
+    await chat(
+      deps,
+      chatRequest({
+        sessionId,
+        target: "local",
+        message: "Rahasia lokal",
+      }),
+      "2026-10-15T00:02:00.000Z" as Timestamp,
+    );
+    expect(observed).toEqual(["CLOUD_ALLOWED", "CLOUD_ALLOWED", "LOCAL_ONLY", "LOCAL_ONLY"]);
+    expect(deps.history.getSession(sessionId)?.syncClass).toBe("LOCAL_ONLY");
+  });
+
   it("authority deny stops hosted chat before Context or Connect egress", async () => {
     const deniedProject = deps.projects.create(
       {
@@ -313,6 +490,7 @@ describe("chat", () => {
       const body = JSON.parse(String(opts.body)) as Record<string, unknown>;
       expect(body).toMatchObject({
         query: "Explain the selected fact",
+        projectFallback: false,
         scopes: ["personal"],
         projectId: "prj_personal",
         maxSensitivity: "RESTRICTED",
@@ -335,7 +513,7 @@ describe("chat", () => {
     });
     contextPool
       .intercept({
-        path: "/v1/episodes?sessionId=sess_braingrounded&projectId=prj_personal&limit=6&hostedEligible=0",
+        path: "/v1/episodes?sessionId=sess_braingrounded&projectId=prj_personal&scope=personal&maxSensitivity=RESTRICTED&limit=6&hostedEligible=0",
         method: "GET",
       })
       .reply(200, { episodes: [] });

@@ -1,5 +1,19 @@
 # ECORIONE — Execution Progress
 
+## Project Memory operator task — 2026-10-18
+
+Draft PR #467 is the active authorized memory repair/acceptance scope. Original UI
+acceptance passed bounded cross-session/model recall, Project/egress isolation and
+backed-up restart persistence. No original facts were changed or deleted. Connect
+now cancels abandoned completions after the caller disconnects. LOCAL_ONLY
+extraction timeout and a Hermes paraphrase error keep full acceptance open.
+The 18 October checkpoint preserves healthy backups, the `3d56b41` repository
+baseline, stricter prepared acceptance assertions and interrupted model attempts.
+Fresh original-UI access is blocked; backend work was explicitly prioritized.
+Current results and remaining gates are maintained in the
+[safe checkpoint](verification/project-memory-safe-checkpoint-2026-10-18.md).
+The earlier Session 12D/staging milestones below retain their original boundaries.
+
 Last updated: **2026-10-04**
 
 Status: **CURRENT SUMMARY / SESSION 12D REPOSITORY+MOCK GREEN / SUMOPOD ACTIVE-STAGING ROLE RETIRED / REAL LOCAL GOOGLE OAUTH+PICKER ACCEPTANCE NEXT**

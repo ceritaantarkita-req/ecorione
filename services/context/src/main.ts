@@ -53,7 +53,7 @@ async function extractLocal(prompt: string): Promise<string> {
       target: "local",
       prefix: {
         systemPrompt:
-          "Kamu pengekstrak fakta untuk memori ecorione. Jawab hanya dengan JSON array sesuai instruksi di pesan pengguna.",
+          "Kamu pengekstrak fakta untuk memori ecorione. Jawab hanya objek JSON valid dengan facts dan summaries sesuai instruksi. Jangan gunakan code fence atau markdown.",
         toolDefinitions: [],
         coreMemory: { blocks: [] },
       },
@@ -63,11 +63,17 @@ async function extractLocal(prompt: string): Promise<string> {
       operationId: makeId("operation"),
       now: nowIso(),
     },
+    timeoutMs: 60_000,
   });
   return res.reply;
 }
 
-const app = buildContextServer(repo, vectors, { token, logger: true, extractLocal });
+const app = buildContextServer(repo, vectors, {
+  token,
+  logger: true,
+  extractLocal,
+  autoConsolidate: true,
+});
 registerArtifactRoutes(app, repo);
 registerMultimodalRoutes(app, repo);
 registerAccessRoutes(app, repo);

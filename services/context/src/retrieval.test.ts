@@ -254,3 +254,65 @@ describe("Peluruhan recency", () => {
     expect(hits[0]?.fact.id).toBe("mem_baru");
   });
 });
+
+describe("bounded Project fallback for chat", () => {
+  it("recalls authorized Project L1 on a lexical miss, with honest attribution and k", () => {
+    const { repo, retriever } = setup();
+    const projectId = "prj_alpha" as never;
+    repo.insertFact(
+      factInput({ id: "mem_code", projectId, text: "Eksperimen AURORA-518", salience: 1 }),
+    );
+    repo.insertFact(
+      factInput({ id: "mem_owner", projectId, text: "PIC Dimas", salience: 0.8 }),
+    );
+    const options = {
+      query: "Siapa memimpin percobaan itu?",
+      scopes: ["personal" as const],
+      projectId,
+      now: NOW,
+    };
+    expect(retriever.retrieve(options).hits).toEqual([]);
+    const result = retriever.retrieve({ ...options, projectFallback: true, k: 1 });
+    expect(result.hits.map((h) => h.fact.id)).toEqual(["mem_code"]);
+    expect(result.hits[0]?.matchedBy).toEqual(["project"]);
+    expect(result.diagnostics.lexicalCandidates).toBe(0);
+    expect(
+      retriever
+        .retrieve({ ...options, projectFallback: true, query: "Dimas" })
+        .hits.map((h) => h.fact.id),
+    ).toEqual(["mem_owner"]);
+  });
+
+  it("keeps scope, sensitivity, egress, Project, invalidation and Brain constraints fail-closed", () => {
+    const { repo, retriever } = setup();
+    const projectId = "prj_alpha" as never;
+    for (const override of [
+      { id: "mem_private", syncClass: "LOCAL_ONLY" as const },
+      { id: "mem_global", projectId: null },
+      { id: "mem_sibling", projectId: "prj_beta" as never },
+      { id: "mem_sensitive", sensitivity: "RESTRICTED" as const },
+      { id: "mem_work", scope: "work" as const },
+      { id: "mem_invalid" },
+      { id: "mem_allowed" },
+    ])
+      repo.insertFact(factInput({ projectId, syncClass: "CLOUD_ALLOWED", ...override }));
+    repo.forgetFact("mem_invalid" as never, NOW, projectId);
+    const options = {
+      query: "paraphrase",
+      scopes: ["personal" as const],
+      projectId,
+      now: NOW,
+      maxSensitivity: "INTERNAL" as const,
+      hostedEligibleOnly: true,
+      projectFallback: true,
+    };
+    expect(retriever.retrieve(options).hits.map((h) => h.fact.id)).toEqual(["mem_allowed"]);
+    expect(retriever.retrieve({ ...options, candidateFactIds: [] }).hits).toEqual([]);
+    expect(
+      retriever.retrieve({ ...options, candidateFactIds: ["mem_allowed" as never] }).hits,
+    ).toEqual([]);
+    expect(retriever.retrieve({ ...options, candidateSourceUris: [] }).hits).toEqual([]);
+    expect(retriever.retrieve({ ...options, projectId: null }).hits).toEqual([]);
+    expect(retriever.retrieve({ ...options, query: "?!" }).hits).toEqual([]);
+  });
+});
