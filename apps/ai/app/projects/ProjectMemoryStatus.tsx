@@ -25,6 +25,9 @@ type MemoryHealth = {
   queued: boolean;
   lastAttempt: "unknown" | "failed" | "complete";
   lastFailureCodes?: readonly (keyof typeof FAILURE_LABELS)[];
+  lastAttemptDurationMs?: number | null;
+  lastExtractionDurationMs?: number | null;
+  lastExtractionPromptBytes?: number | null;
 };
 
 export function ProjectMemoryStatus({
@@ -113,6 +116,17 @@ export function ProjectMemoryStatus({
               Cloud Allowed: <strong>{snapshot.cloudEligibleFacts}</strong>
             </span>
           </div>
+          {snapshot.lastAttemptDurationMs != null ? (
+            <p className={styles.memoryStatusHint}>
+              Waktu proses terakhir: {snapshot.lastAttemptDurationMs} ms.
+              {snapshot.lastExtractionDurationMs != null
+                ? ` Ekstraksi model: ${snapshot.lastExtractionDurationMs} ms.`
+                : ""}
+              {snapshot.lastExtractionPromptBytes != null
+                ? ` Ukuran prompt: ${snapshot.lastExtractionPromptBytes} byte.`
+                : ""}
+            </p>
+          ) : null}
           {snapshot.lastAttempt === "failed" && (snapshot.lastFailureCodes?.length ?? 0) > 0 ? (
             <p className={styles.memoryStatusHint}>
               Penyebab terakhir:{" "}
