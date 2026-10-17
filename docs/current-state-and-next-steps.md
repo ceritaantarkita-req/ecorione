@@ -1,13 +1,18 @@
 # ECORIONE — Current State & Next Steps
 
-## Operator-authorized override — 2026-10-15
+## Operator-authorized override — 2026-10-16
 
 Current implementation: Project Memory root-cause repair and real local acceptance
 on draft PR #467, branch `fix/context-automatic-consolidation-20261014`.
-See [the memory verification record](verification/project-memory-auto-consolidation-2026-10-14.md)
+See [the original UI verification record](verification/project-memory-ui-acceptance-2026-10-16.md)
 for measured storage, retrieval, retry, privacy and model acceptance boundaries.
-Session 12D remains at its prior boundary below. No merge, remote staging, paid
-hosted canary, or mutation/restart of the user's original database is authorized here.
+Real UI writes and one controlled restart were explicitly authorized and completed
+after SQLite backup; data was not reset or restored. Project isolation, policy
+filtering, persistence and bounded Qwen-to-Hermes recall passed. New LOCAL_ONLY
+extraction still times out, and Hermes produced one wrong paraphrase deadline.
+The confirmed abandoned-inference cancellation bug is repaired. Full acceptance
+remains open and PR #467 stays draft. Session 12D remains at its prior boundary
+below; merge, remote staging and paid hosted canaries remain unauthorized.
 
 Last updated: **2026-10-04**
 

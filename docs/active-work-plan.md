@@ -1,11 +1,13 @@
 # ECORIONE — Active Work Plan
 
-## Operator-authorized active task — 2026-10-15
+## Operator-authorized active task — 2026-10-16
 
 Project Memory repair/acceptance on existing draft PR #467 takes precedence for this
-task. Finish bounded Context/Hub fixes, deterministic regression gates and isolated
-real local-model acceptance; update the PR and leave merge to the operator.
-Read [the memory evidence](verification/project-memory-auto-consolidation-2026-10-14.md)
+task. Original UI acceptance and a backed-up controlled restart have now run.
+Keep PR draft: resolve/reaccept the measured LOCAL_ONLY extraction timeout and
+Hermes paraphrase-quality failure before claiming complete memory acceptance.
+Do not weaken deadlines or relabel failed extraction as saved.
+Read [the memory evidence](verification/project-memory-ui-acceptance-2026-10-16.md)
 for PASS/FAIL/PENDING details. The Session 12D queue below is preserved, not expanded.
 
 Last updated: **2026-10-04**

@@ -632,11 +632,13 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     });
   }
 
-  app.post("/v1/complete", async (req) => {
+  app.post("/v1/complete", async (req, reply) => {
     const body = parseOrBadRequest(CompleteBodySchema, req.body);
     const controller = new AbortController();
     const abort = (): void => controller.abort();
     req.raw.once("aborted", abort);
+    // A caller deadline usually closes the response after its request body is complete.
+    reply.raw.once("close", abort);
     try {
       const result = await complete(await currentCompletionDeps(), body, controller.signal);
       recordCompletion(body, result);
@@ -645,6 +647,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
       throw toHttpError(err);
     } finally {
       req.raw.off("aborted", abort);
+      reply.raw.off("close", abort);
     }
   });
 
