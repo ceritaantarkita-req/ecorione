@@ -604,6 +604,69 @@ describe("runConsolidation", () => {
     expect(result.processed).toBe(2);
   });
 
+  it("keeps three independently stated claims and trims redundant model input metadata", async () => {
+    const { repo } = makeRepo();
+    const rawText =
+      "Kode percobaan BINTANG-205. Penanggung jawabnya Dimas. Deadline 30 November 2026.";
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_three",
+        projectId: "prj_alpha" as never,
+        rawText,
+      }),
+    );
+    const extractLocal = vi.fn(async (prompt: string) => {
+      const payload = JSON.parse(prompt.slice(prompt.lastIndexOf("\n") + 1)) as unknown;
+      expect(payload).toEqual([{ id: "epi_three", syncClass: "LOCAL_ONLY", text: rawText }]);
+      expect(prompt).not.toContain('"sourceApp"');
+      expect(prompt).not.toContain('"projectId"');
+      return JSON.stringify({
+        facts: [
+          {
+            sourceEpisodeId: "epi_three",
+            subject: "percobaan",
+            predicate: "kode",
+            object: "BINTANG-205",
+            confidence: 1,
+            worthRemembering: true,
+          },
+          {
+            sourceEpisodeId: "epi_three",
+            subject: "percobaan",
+            predicate: "penanggung jawab",
+            object: "Dimas",
+            confidence: 1,
+            worthRemembering: true,
+          },
+          {
+            sourceEpisodeId: "epi_three",
+            subject: "percobaan",
+            predicate: "deadline",
+            object: "30 November 2026",
+            confidence: 1,
+            worthRemembering: true,
+          },
+        ],
+        summaries: [],
+      });
+    });
+
+    const result = await runConsolidation(
+      { repo, extractLocal },
+      { now: NOW, projectId: "prj_alpha" as never },
+    );
+    expect(result).toMatchObject({ processed: 1, promoted: 3, errors: [] });
+    expect(extractLocal).toHaveBeenCalledOnce();
+    expect(repo.getEpisode(assertId("episode", "epi_three"))?.consolidatedAt).toBe(NOW);
+    const facts = repo.listFacts({ projectId: "prj_alpha" as never });
+    expect(facts.map((fact) => fact.object).sort()).toEqual([
+      "30 November 2026",
+      "BINTANG-205",
+      "Dimas",
+    ]);
+    expect(facts.every((fact) => fact.sourceEpisodeIds[0] === "epi_three")).toBe(true);
+  });
+
   it("memanggil extractLocal tepat sekali per batch, bukan per episode", async () => {
     const { repo } = makeRepo();
     repo.appendEpisode(episodeInput({ id: "epi_a" }));
