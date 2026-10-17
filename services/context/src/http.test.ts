@@ -214,6 +214,9 @@ describe("aggregate Project Memory diagnostics", () => {
       queued: false,
       lastAttempt: "unknown",
       lastFailureCodes: [],
+      lastAttemptDurationMs: null,
+      lastExtractionDurationMs: null,
+      lastExtractionPromptBytes: null,
     });
     expect(response.body).not.toContain("private token");
     expect(response.body).not.toContain("BETA_ONLY");
@@ -283,6 +286,24 @@ describe("automatic cross-session Project memory", () => {
       await vi.waitFor(() =>
         expect(repo.listFacts({ projectId: "prj_alpha" as never })).toHaveLength(1),
       );
+      // Only numeric, owner-scoped timing metadata may be emitted; no memory text.
+      await vi.waitFor(async () => {
+        const metrics = await autoApp.inject({
+          method: "GET",
+          url: "/v1/memory/status?projectId=prj_alpha",
+        });
+        const snapshot = metrics.json() as {
+          lastAttempt: string;
+          lastAttemptDurationMs: number | null;
+          lastExtractionDurationMs: number | null;
+          lastExtractionPromptBytes: number | null;
+        };
+        expect(snapshot.lastAttempt).toBe("complete");
+        expect(snapshot.lastAttemptDurationMs).toBeGreaterThanOrEqual(0);
+        expect(snapshot.lastExtractionDurationMs).toBeGreaterThanOrEqual(0);
+        expect(snapshot.lastExtractionPromptBytes).toBeGreaterThan(0);
+        expect(metrics.body).not.toContain("BIRU-742");
+      });
       const recall = await autoApp.inject({
         method: "POST",
         url: "/v1/retrieve",
