@@ -1,11 +1,15 @@
 # ECORIONE — Current State & Next Steps
 
-## Operator-authorized override — 2026-10-16
+## Operator-authorized override — 2026-10-18
 
 Current implementation: Project Memory root-cause repair and real local acceptance
 on draft PR #467, branch `fix/context-automatic-consolidation-20261014`.
-See [the original UI verification record](verification/project-memory-ui-acceptance-2026-10-16.md)
-for measured storage, retrieval, retry, privacy and model acceptance boundaries.
+See [the safe checkpoint](verification/project-memory-safe-checkpoint-2026-10-18.md)
+for current backup, repository and interrupted-model evidence. Local source was
+fast-forwarded to `3d56b41`; strengthened real-model checks are prepared but have
+not completed. Original UI is blocked by browser policy; the operator selected
+backend work first. Five databases match the latest healthy backups, and no engine
+or model acceptance process is active at checkpoint.
 Real UI writes and one controlled restart were explicitly authorized and completed
 after SQLite backup; data was not reset or restored. Project isolation, policy
 filtering, persistence and bounded Qwen-to-Hermes recall passed. New LOCAL_ONLY

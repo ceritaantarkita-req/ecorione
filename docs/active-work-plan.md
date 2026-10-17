@@ -1,14 +1,16 @@
 # ECORIONE — Active Work Plan
 
-## Operator-authorized active task — 2026-10-16
+## Operator-authorized active task — 2026-10-18
 
 Project Memory repair/acceptance on existing draft PR #467 takes precedence for this
 task. Original UI acceptance and a backed-up controlled restart have now run.
 Keep PR draft: resolve/reaccept the measured LOCAL_ONLY extraction timeout and
 Hermes paraphrase-quality failure before claiming complete memory acceptance.
 Do not weaken deadlines or relabel failed extraction as saved.
-Read [the memory evidence](verification/project-memory-ui-acceptance-2026-10-16.md)
-for PASS/FAIL/PENDING details. The Session 12D queue below is preserved, not expanded.
+Resume from [the safe checkpoint](verification/project-memory-safe-checkpoint-2026-10-18.md).
+Complete the strengthened isolated Qwen/Hermes checks, then restore browser access
+and repeat original-UI acceptance. Recent model runs were interrupted, not PASS.
+The Session 12D queue below is preserved, not expanded.
 
 Last updated: **2026-10-04**
 

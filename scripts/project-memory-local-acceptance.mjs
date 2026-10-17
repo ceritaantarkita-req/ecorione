@@ -167,12 +167,13 @@ async function settled(projectId) {
   }
   throw new Error("Consolidation deadline exceeded");
 }
-async function chat(message, projectId = project.id) {
+async function chat(message, projectId = project.id, cloudShare = false) {
   const result = await json(`${hubUrl}/v1/chat`, {
     message,
     projectId,
     sessionId: `sess_${randomUUID().replaceAll("-", "")}`,
     target: "local",
+    cloudShare,
   });
   assert.equal(result.memoryUsed.episodicSummaries.length, 0);
   return {
@@ -184,7 +185,7 @@ function record(id, result) {
   console.log(JSON.stringify({ id, ...result }));
 }
 function recall(id, result, expected) {
-  const passed = expected.every((m) => result.reply.toLowerCase().includes(m.toLowerCase()));
+  const passed = expected.every((m) => result.reply.includes(m));
   assert(
     expected.every((m) => result.inputMarkers.includes(m)),
     `${id}: missing actual model input`,
@@ -218,7 +219,8 @@ try {
     status,
     found: markers.map((m) => facts.some((f) => f.text.includes(m))),
   });
-  assert(markers.every((m) => facts.some((f) => f.text.includes(m))));
+  assert.equal(facts.length, 3, "Three independent claims must produce three facts");
+  assert(markers.every((m) => facts.some((f) => f.object === m)));
   for (const fact of facts)
     for (const sourceId of fact.sourceEpisodeIds) {
       const source = repo.getEpisode(sourceId);
@@ -304,7 +306,35 @@ try {
       markers,
     );
     await settled(project.id);
+    recall(
+      "M06_PARAPHRASE",
+      await chat("Siapa yang memimpin percobaan itu dan kapan harus rampung?"),
+      markers.slice(1),
+    );
+    await settled(project.id);
   } else record("M06", { status: "PENDING", reason: "second installed model not supplied" });
+  const localFacts = repo.listFacts({ projectId: project.id, includeGlobal: false });
+  const shared = await chat(
+    "Kode demo publik Project ini adalah LENTERA-207. Jawab OK saja.",
+    project.id,
+    true,
+  );
+  assert.equal(shared.inputMarkers.length, 0, "Cloud Allowed must exclude Local Only input");
+  const sharedStatus = await settled(project.id);
+  assert.equal(sharedStatus.pendingEpisodes, 0);
+  assert.equal(sharedStatus.lastFailureCodes.length, 0);
+  const eligible = await json(`${contextUrl}/v1/retrieve`, {
+    query: "Apa kode demo publik?",
+    projectId: project.id,
+    scopes: ["personal"],
+    now: now(),
+    hostedEligibleOnly: true,
+    projectFallback: true,
+  });
+  assert(eligible.hits.some((hit) => hit.fact.object === "LENTERA-207"));
+  assert(eligible.hits.every((hit) => hit.fact.syncClass === "CLOUD_ALLOWED"));
+  for (const fact of localFacts) assert.deepEqual(repo.getFact(fact.id), fact);
+  record("M11", { status: "PASS", boundary: "per-message consent; no hosted dispatch" });
 } finally {
   await hubApp?.close();
   await stopContext();

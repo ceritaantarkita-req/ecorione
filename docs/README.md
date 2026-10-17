@@ -26,7 +26,7 @@ Historical verification is intentionally preserved even when it contains an olde
 
 ## Read these first
 
-**2026-10-16 active operator task:** [Project Memory original UI acceptance](verification/project-memory-ui-acceptance-2026-10-16.md),
+**2026-10-18 active operator checkpoint:** [Project Memory safe resume](verification/project-memory-safe-checkpoint-2026-10-18.md),
 draft PR #467. Current-state/work-plan overrides distinguish this scope from the
 unchanged Session 12D checkpoint below.
 
