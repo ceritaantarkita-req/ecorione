@@ -140,3 +140,51 @@ Private command logs: `memory-ui-regression.log`, `memory-ui-baseline-dr.log`,
 17 October follow-up. Remote status must be checked against the current
 PR head; the starting head's green checks do not certify this patch. No merge was
 performed.
+
+## 17 October follow-up — smaller extraction input and safe timing (repository patch)
+
+This follow-up does **not** supersede the original-UI failures above. It is a
+repository-side diagnostic and prompt-reduction patch awaiting fresh local
+Qwen/Hermes acceptance. Local runtime execution and database mutation were
+**not** part of this follow-up.
+
+- Context now passes only the required episode identifier, sync class and
+  USER text to the local extractor; Context itself still owns provenance,
+  Project isolation, sensitivity, promotion and deduplication. Extraction still
+  asks for separate named facts, exact source codes and literal deadlines.
+  This reduces prompt prefill bytes; it is **not** evidence that the 60-second
+  problem is solved.
+- Context's owner-checked Project Memory status now reports ephemeral numeric
+  `lastAttemptDurationMs`, `lastExtractionDurationMs` and
+  `lastExtractionPromptBytes`. These values reset on server restart and do not
+  contain episode content, IDs, model output or exception messages. The Projects
+  panel displays the counters after an attempt.
+- Hub's recalled-fact instruction now explicitly requires literal preservation
+  of stored dates, deadlines, names, numbers and identifiers. This is an
+  instruction-level mitigation, **not** a passing Hermes paraphrase result.
+- Regression coverage checks three independently stated facts from one USER
+  episode, compact prompt input, source linkage and owner-scoped timing output.
+
+### Remaining operator-controlled real-local acceptance
+
+After backing up existing SQLite databases and verifying the local Qwen/Ollama
+runtime and selected Project (without deleting or restoring any data):
+
+1. Use an isolated harmless QA Project/test conversation and send three distinct
+   factual claims (code, owner and deadline) with Local Only selected.
+2. Refresh Project Memory status. Record numeric prompt bytes and extraction /
+   attempt durations without capturing personal raw prompts in committed logs.
+   Confirm **all three** facts are durably stored and the source episode is no
+   longer pending; a single success or just the L0 reply is insufficient.
+3. In a fresh chat with Hermes, ask for the exact code, owner and deadline and
+   separately ask a paraphrased deadline question. Compare answers byte-for-byte
+   with the saved literal fact values. Record any wrong answer as FAIL.
+4. Recheck a sibling Project, hosted-eligibility filtering and the local-only
+   egress boundary. Keep hosted AI/cost kill switch disabled; do not use a paid
+   canary. If an explicit retry is required, confirm no duplicate/superseded
+   facts and no old user facts were damaged.
+5. Reconfirm CI on the exact patched PR head. Only after the real-model acceptance
+   and outstanding regression issues are reviewed may merge readiness be
+   reconsidered with operator approval.
+
+PR #467 remains **DRAFT / NOT READY TO MERGE** pending those checks.
