@@ -123,8 +123,10 @@ after the final successful cross-model case returned no errors.
   source restored in an isolated snapshot; they are not resolved by this patch.
 - Two Temporal acceptance cases timed out after 120 seconds:
   `test/phase4-temporal-runtime.test.ts` and
-  `services/flow/src/trigger-temporal.test.ts`. Their cause remains unresolved;
-  this run is not a full green regression result.
+  `services/flow/src/trigger-temporal.test.ts`. A targeted repeat on 17 October,
+  at code commit `617e33dd03f96909a4668d0a851255a2c7f57a83`, passed both cases
+  (2 passed, 1 existing skipped) in 15.79 seconds without changing code or limits.
+  The original timeout cause is not proven; the full run remains recorded as failed.
 - Typecheck, ESLint and production build passed in an isolated copy of the final
   source, preserving the active UI's development output. Existing Next/ESLint and
   CSS autoprefixer warnings remain; no new dependency was introduced.
@@ -134,6 +136,7 @@ after the final successful cross-model case returned no errors.
 
 Private command logs: `memory-ui-regression.log`, `memory-ui-baseline-dr.log`,
 `memory-ui-typecheck.log`, `memory-ui-lint.log`, `memory-ui-build.log` and
-`memory-ui-secret-history.log`. Remote status must be checked against the current
+`memory-ui-secret-history.log`, plus `memory-ui-temporal-recheck.log` for the
+17 October follow-up. Remote status must be checked against the current
 PR head; the starting head's green checks do not certify this patch. No merge was
 performed.
