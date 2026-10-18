@@ -1,5 +1,6 @@
 name: Project Memory Format Diagnostic
 on:
+  pull_request:
   push:
     paths:
       - .github/workflows/project-memory-format-diagnostic.yml
