@@ -47,6 +47,37 @@ describe("Ollama native local adapter", () => {
     expect(body).toMatchObject({ model: "qwen3.5:9b", stream: false, think: false });
   });
 
+  it("bounds extraction output and requires native JSON without changing normal chat", async () => {
+    let payload: unknown;
+    pool.intercept({ path: "/api/chat", method: "POST" }).reply(200, (options) => {
+      payload = JSON.parse(options.body as string);
+      return {
+        model: "qwen3.5:9b",
+        message: { content: '{"facts":[],"summaries":[]}' },
+        prompt_eval_count: 12,
+        eval_count: 13,
+      };
+    });
+
+    const result = await callOllama({
+      baseUrl: "http://127.0.0.1:11434/v1",
+      modelTag: "qwen3.5:9b",
+      localTask: "memory-extraction",
+      prefix: prefix(),
+      dynamicText: "",
+      userMessage: "Extract durable facts.",
+    });
+
+    expect(result.reply).toBe('{"facts":[],"summaries":[]}');
+    expect(payload).toMatchObject({
+      model: "qwen3.5:9b",
+      stream: false,
+      think: false,
+      format: "json",
+      options: { num_predict: 768, temperature: 0 },
+    });
+  });
+
   it("maps an OpenAI-compatible base URL to Ollama native root", () => {
     expect(ollamaApiBaseUrl("http://127.0.0.1:11434/v1")).toBe("http://127.0.0.1:11434");
   });
