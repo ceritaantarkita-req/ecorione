@@ -109,3 +109,30 @@ Private logs: `memory-20261017-regression.log`, `memory-20261017-typecheck.log`,
 5. Recheck persistence and exact-head repository gates after any runtime repair.
    Keep PR #467 draft until the remaining acceptance failures are truly resolved;
    merge and deployment require the operator's separate approval.
+
+## Follow-up GitHub integrity patch — 18 October (repository-only)
+
+This section is newer than the **safe checkpoint** recorded above and does not
+rewrite the historical local evidence.
+
+- The Context consolidation pipeline now requires the **literal value** of
+  date/deadline, code/identifier, and owner/responsible-person claims to appear
+  in the authoritative USER source episode before promotion. Date-shaped
+  values and hyphenated reference codes are guarded even with generic model
+  predicates. Matches are case-sensitive and use word boundaries, preventing
+  a truncated code from being accepted as a substring.
+- A mismatch returns only the stable `SOURCE_LITERAL_MISMATCH` diagnostic:
+  no source text/model output is logged, the invalid claim is not promoted,
+  and the episode remains pending for retry. Previously stored supported
+  facts remain intact. The Projects UI explains the failure without disclosing
+  private content.
+- Unit regressions cover a three-claim retry with a fabricated deadline,
+  unsupported owner/code values, and generic-predicate/partial-code attempts.
+  Earlier unrelated source/provenance, policy-class and privacy gates remain.
+- This safeguards **storage correctness**, not the separate local-Qwen
+  inference deadline or Hermes answer correctness. No new real local model,
+  original UI, SQLite database, deployment, or paid-hosted call was performed
+  as part of this GitHub-only patch.
+
+**Acceptance remains INCOMPLETE / PR #467 DRAFT.** CI on the final patch head
+must be checked separately; exact-Qwen/Hermes proof is still required.
