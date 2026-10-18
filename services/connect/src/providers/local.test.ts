@@ -131,6 +131,28 @@ describe("callLocal", () => {
     });
   });
 
+  it("applies deterministic extraction controls only to the explicit local task", async () => {
+    let captured: unknown;
+    pool.intercept({ path: "/v1/chat/completions", method: "POST" }).reply(200, (opts) => {
+      captured = JSON.parse(opts.body as string);
+      return { choices: [{ message: { content: '{"facts":[]}' } }], usage: {} };
+    });
+
+    await callLocal({
+      baseUrl: "http://127.0.0.1:11434/v1",
+      modelTag: "qwen3.5:9b",
+      localTask: "memory-extraction",
+      prefix: prefix(),
+      dynamicText: "",
+      userMessage: "Return JSON facts",
+    });
+    expect(captured).toMatchObject({
+      max_tokens: 768,
+      temperature: 0,
+      reasoning_effort: "none",
+    });
+  });
+
   it("dynamic context tetap data terpisah dan live user request selalu message terakhir", async () => {
     let capturedBody: unknown;
     pool.intercept({ path: "/v1/chat/completions", method: "POST" }).reply(200, (opts) => {
