@@ -10,7 +10,8 @@ const FAILURE_LABELS = {
   SOURCE_EPISODE_REQUIRED: "Fakta tidak mencantumkan referensi episode.",
   SOURCE_EPISODE_UNKNOWN: "Referensi episode dari model tidak cocok.",
   SOURCE_EPISODE_UNTRUSTED: "Fakta tidak berasal dari pesan pengguna.",
-  SOURCE_LITERAL_MISMATCH: "Kode, tanggal, atau identitas tidak sama persis dengan pesan sumber; episode disimpan untuk dicoba ulang.",
+  SOURCE_LITERAL_MISMATCH:
+    "Kode, tanggal, atau identitas tidak sama persis dengan pesan sumber; episode disimpan untuk dicoba ulang.",
   PROMOTION_REJECTED: "Penyimpanan fakta ditolak oleh validasi.",
   UNEXPECTED_FAILURE: "Proses konsolidasi mengalami gangguan internal.",
 } as const;
