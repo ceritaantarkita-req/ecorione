@@ -772,6 +772,44 @@ describe("runConsolidation", () => {
     expect(repo.getEpisode(assertId("episode", "epi_anchor"))?.consolidatedAt).toBeNull();
   });
 
+  it("rejects partial reference codes and invented dates with generic predicates", async () => {
+    const { repo } = makeRepo();
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_literal_2",
+        rawText: "Kode percobaan AURORA-518, tenggat 28 Desember 2026.",
+      }),
+    );
+    const extractLocal = vi.fn().mockResolvedValue(
+      JSON.stringify({
+        facts: [
+          {
+            subject: "percobaan",
+            predicate: "adalah",
+            object: "AURORA-51",
+            confidence: 1,
+            worthRemembering: true,
+          },
+          {
+            subject: "tenggat",
+            predicate: "adalah",
+            object: "28 November 2026",
+            confidence: 1,
+            worthRemembering: true,
+          },
+        ],
+        summaries: [],
+      }),
+    );
+
+    const result = await runConsolidation({ repo, extractLocal }, { now: NOW });
+    expect(result.errors).toEqual(["SOURCE_LITERAL_MISMATCH", "SOURCE_LITERAL_MISMATCH"]);
+    expect(result.processed).toBe(0);
+    expect(result.promoted).toBe(0);
+    expect(repo.listFacts()).toHaveLength(0);
+    expect(repo.getEpisode(assertId("episode", "epi_literal_2"))?.consolidatedAt).toBeNull();
+  });
+
   it("memanggil extractLocal tepat sekali per batch, bukan per episode", async () => {
     const { repo } = makeRepo();
     repo.appendEpisode(episodeInput({ id: "epi_a" }));
