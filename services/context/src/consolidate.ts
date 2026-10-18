@@ -156,7 +156,7 @@ function literalValueIsInSource(value: string, sourceText: string): boolean {
   const isWord = (char: string): boolean => /[\p{L}\p{N}_]/u.test(char);
   let at = haystack.indexOf(needle);
   while (at !== -1) {
-    const before = at === 0 ? "" : haystack[at - 1] ?? "";
+    const before = at === 0 ? "" : (haystack[at - 1] ?? "");
     const after = haystack[at + needle.length] ?? "";
     if ((before === "" || !isWord(before)) && (after === "" || !isWord(after))) {
       return true;
