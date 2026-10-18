@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { StablePrefix } from "@ecorione/context-assembly";
-import { callLocal, type LocalCallResult } from "./local.js";
+import { callLocal, type LocalCallResult, type LocalTask } from "./local.js";
 import { callOllama } from "./ollama.js";
 
 export const LOCAL_RUNTIME_IDS = ["openai-compatible", "ollama"] as const;
@@ -14,6 +14,7 @@ export function parseLocalRuntime(value: string | undefined): LocalRuntimeId {
 
 export interface LocalRuntimeCallInput {
   readonly runtime: LocalRuntimeId;
+  readonly localTask?: LocalTask | undefined;
   readonly baseUrl: string;
   readonly modelTag: string;
   readonly prefix: StablePrefix;
