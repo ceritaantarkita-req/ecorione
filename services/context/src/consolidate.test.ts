@@ -609,7 +609,7 @@ describe("runConsolidation", () => {
     expect(result.processed).toBe(2);
   });
 
-  it("keeps three independently stated claims and trims redundant model input metadata", async () => {
+  it("keeps three claims and trims redundant extraction metadata", async () => {
     const { repo } = makeRepo();
     const rawText =
       "Kode percobaan BINTANG-205. Penanggung jawabnya Dimas. Deadline 30 November 2026.";
@@ -737,7 +737,7 @@ describe("runConsolidation", () => {
     expect(extractor).toHaveBeenCalledTimes(2);
   });
 
-  it("refuses invented identity and code literals but leaves semantic preferences unchanged", async () => {
+  it("rejects invented code and identity but accepts supported preference", async () => {
     const { repo } = makeRepo();
     repo.appendEpisode(
       episodeInput({
