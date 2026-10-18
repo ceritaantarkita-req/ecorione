@@ -77,7 +77,10 @@ describe("runConsolidation", () => {
   it("retries invalid provenance without duplicating already promoted facts", async () => {
     const { repo } = makeRepo();
     repo.appendEpisode(
-      episodeInput({ id: "epi_user", rawText: "Kode eksperimen AURORA-518, penanggung jawab Dimas" }),
+      episodeInput({
+        id: "epi_user",
+        rawText: "Kode eksperimen AURORA-518, penanggung jawab Dimas",
+      }),
     );
     const candidate = {
       sourceEpisodeId: "epi_user",
@@ -734,7 +737,10 @@ describe("runConsolidation", () => {
   it("refuses invented identity and code literals but leaves semantic preferences unchanged", async () => {
     const { repo } = makeRepo();
     repo.appendEpisode(
-      episodeInput({ id: "epi_anchor", rawText: "Kode final BIRU-742, pemilik proyek Dimas. Saya suka warna biru." }),
+      episodeInput({
+        id: "epi_anchor",
+        rawText: "Kode final BIRU-742, pemilik proyek Dimas. Saya suka warna biru.",
+      }),
     );
     const extractLocal = vi.fn().mockResolvedValue(
       JSON.stringify({
