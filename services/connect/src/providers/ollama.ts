@@ -3,7 +3,7 @@ import type { TokenUsage } from "@ecorione/shared-telemetry";
 import { ProviderError } from "./errors.js";
 import {
   localChatMessages,
-  localGenerationControls,
+  localTaskControls,
   type LocalCallInput,
   type LocalCallResult,
 } from "./local.js";
@@ -28,11 +28,12 @@ export async function callOllama(
   input: LocalCallInput,
   signal?: AbortSignal,
 ): Promise<LocalCallResult> {
-  const controls = localGenerationControls();
+  const controls = localTaskControls(input.localTask);
   const body = {
     model: input.modelTag,
     messages: localChatMessages(input),
     stream: false,
+    ...(input.localTask === "memory-extraction" ? { format: "json" } : {}),
     // Native Ollama supports this control for thinking models. Keep Local chat responsive.
     think: controls.reasoning_effort !== undefined && controls.reasoning_effort !== "none",
     ...(controls.max_tokens === undefined && controls.temperature === undefined
