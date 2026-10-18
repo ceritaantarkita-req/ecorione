@@ -29,6 +29,7 @@ export type ConsolidationFailureCode =
   | "SOURCE_EPISODE_REQUIRED"
   | "SOURCE_EPISODE_UNKNOWN"
   | "SOURCE_EPISODE_UNTRUSTED"
+  | "SOURCE_LITERAL_MISMATCH"
   | "PROMOTION_REJECTED"
   | "UNEXPECTED_FAILURE";
 
@@ -124,6 +125,21 @@ function normalize(value: string): string {
   return value.trim().toLocaleLowerCase("en-US");
 }
 
+/** Literal anchors cannot be repaired, inferred or reformatted by the extractor.
+ * This guard is narrow: unstructured preferences still allow semantic phrasing.
+ */
+function needsLiteralEvidence(predicate: string): boolean {
+  return /\b(?:deadline|due(?:\s+date)?|date|tanggal|tenggat|jatuh\s+tempo|target\s+penyelesaian|kode|code|identifier|nomor|owner|penanggung\s+jawab|responsible\s+person)\b/iu.test(
+    predicate,
+  );
+}
+
+function literalValueIsInSource(value: string, sourceText: string): boolean {
+  const normalizedValue = value.replace(/\s+/gu, " ").trim();
+  const normalizedSource = sourceText.replace(/\s+/gu, " ");
+  return normalizedValue.length > 0 && normalizedSource.includes(normalizedValue);
+}
+
 export async function runConsolidation(
   deps: ConsolidateDeps,
   options: ConsolidateOptions,
@@ -215,6 +231,16 @@ export async function runConsolidation(
       if (source.trust !== "USER") {
         rejected += 1;
         errors.push("SOURCE_EPISODE_UNTRUSTED");
+        continue;
+      }
+      // Unsupported dates/codes/owners cannot invalidate existing live facts.
+      // The source episode remains pending for an explicit later retry.
+      if (
+        needsLiteralEvidence(candidate.predicate) &&
+        !literalValueIsInSource(candidate.object, source.rawText)
+      ) {
+        rejected += 1;
+        errors.push("SOURCE_LITERAL_MISMATCH");
         continue;
       }
       const text = `${candidate.subject} ${candidate.predicate} ${candidate.object}`;
