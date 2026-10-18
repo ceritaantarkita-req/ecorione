@@ -130,7 +130,8 @@ function normalize(value: string): string {
  */
 function needsLiteralEvidence(predicate: string, value: string): boolean {
   const simple = /\b(?:deadline|due|date|tanggal|tenggat|kode|code|identifier|nomor|owner)\b/iu;
-  const compound = /\b(?:jatuh\s+tempo|target\s+penyelesaian|penanggung\s+jawab|responsible\s+person)\b/iu;
+  const compound = /\b(?:jatuh\s+tempo|target\s+penyelesaian|penanggung\s+jawab)\b/iu;
+  const person = /\bresponsible\s+person\b/iu;
   const isoDate = /\b\d{4}-\d{2}-\d{2}\b/u;
   const namedDate = /\b\d{1,2}\s+\p{L}+\s+\d{4}\b/u;
   const refCode = /\b[A-Za-z][A-Za-z0-9]*-\d{2,}\b/u;
@@ -139,6 +140,7 @@ function needsLiteralEvidence(predicate: string, value: string): boolean {
   return (
     simple.test(predicate) ||
     compound.test(predicate) ||
+    person.test(predicate) ||
     isoDate.test(value) ||
     namedDate.test(value) ||
     refCode.test(value)
