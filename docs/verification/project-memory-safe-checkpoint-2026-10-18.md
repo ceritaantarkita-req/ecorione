@@ -136,3 +136,36 @@ rewrite the historical local evidence.
 
 **Acceptance remains INCOMPLETE / PR #467 DRAFT.** CI on the final patch head
 must be checked separately; exact-Qwen/Hermes proof is still required.
+
+
+## GitHub-only extraction control tuning — 18 October 2026
+
+This section documents repository-side changes made after the safe local
+checkpoint and literal-source integrity hardening. It does **not** replace the
+operator's original UI or Qwen/Hermes evidence.
+
+- Context tags only its local fact-consolidation completion with
+  `localTask: "memory-extraction"`. Connect rejects this task on hosted
+  requests and propagates it through its existing local routing, cost,
+  identity and cancellation boundaries. Normal local chat is unaffected.
+- The local extraction task explicitly requests bounded 768-token output,
+  temperature zero and no extended reasoning. The native Ollama adapter
+  additionally requests `format: "json"` and `think: false`; its existing
+  normal-chat contract remains unchanged. The OpenAI-compatible adapter
+  uses its available local generation control fields without claiming native
+  Ollama JSON guarantees.
+- Exact-cache identity now distinguishes extraction tasks from normal chat
+  so replies cannot cross those generation-control boundaries.
+- Mock HTTP/provider tests verify the full Connect-to-Ollama task path,
+  the hosted rejection, native JSON framing and unchanged ordinary-chat
+  baseline. CI success is **not** a measured inference latency.
+- The **existing** 60-second Context extraction deadline remains enforced.
+  Qwen initialization delays, longer batched source histories and real
+  Hermes paraphrase fidelity still require operator-controlled model QA.
+  In particular, the 768-token task budget should be evaluated with
+  multi-episode backlog; truncated JSON remains retryable, not accepted.
+
+No GPU or live SQLite database was accessed from this GitHub-only patch.
+No paid model API, deployment, database reset, or merge was performed.
+The PR is still **DRAFT / NOT READY TO MERGE** until authorized real-local
+Qwen/Hermes and original-UI acceptance pass.
