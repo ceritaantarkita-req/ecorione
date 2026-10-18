@@ -76,7 +76,9 @@ describe("runConsolidation", () => {
 
   it("retries invalid provenance without duplicating already promoted facts", async () => {
     const { repo } = makeRepo();
-    repo.appendEpisode(episodeInput({ id: "epi_user" }));
+    repo.appendEpisode(
+      episodeInput({ id: "epi_user", rawText: "Kode eksperimen AURORA-518, penanggung jawab Dimas" }),
+    );
     const candidate = {
       sourceEpisodeId: "epi_user",
       subject: "experiment",
@@ -665,6 +667,109 @@ describe("runConsolidation", () => {
       "Dimas",
     ]);
     expect(facts.every((fact) => fact.sourceEpisodeIds[0] === "epi_three")).toBe(true);
+  });
+
+  it("never saves a hallucinated deadline, keeps valid facts and retries the source", async () => {
+    const { repo } = makeRepo();
+    const projectId = "prj_alpha" as never;
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_literal",
+        projectId,
+        rawText: "Kode eksperimen BINTANG-205, penanggung jawab Dimas, deadline 30 November 2026.",
+      }),
+    );
+    const validCode = {
+      sourceEpisodeId: "epi_literal",
+      subject: "eksperimen",
+      predicate: "kode",
+      object: "BINTANG-205",
+      confidence: 1,
+      worthRemembering: true,
+    };
+    const badDeadline = {
+      ...validCode,
+      predicate: "deadline",
+      object: "15 Oktober 2026",
+    };
+    const extractor = vi
+      .fn()
+      .mockResolvedValueOnce(JSON.stringify({ facts: [validCode, badDeadline], summaries: [] }))
+      .mockResolvedValueOnce(
+        JSON.stringify({
+          facts: [
+            validCode,
+            { ...validCode, predicate: "penanggung jawab", object: "Dimas" },
+            { ...badDeadline, object: "30 November 2026" },
+          ],
+          summaries: [],
+        }),
+      );
+
+    const first = await runConsolidation({ repo, extractLocal: extractor }, { now: NOW, projectId });
+    expect(first).toMatchObject({
+      processed: 0,
+      promoted: 1,
+      rejected: 1,
+      errors: ["SOURCE_LITERAL_MISMATCH"],
+    });
+    expect(repo.getEpisode(assertId("episode", "epi_literal"))?.consolidatedAt).toBeNull();
+    expect(repo.listFacts({ projectId }).map((fact) => fact.object)).toEqual(["BINTANG-205"]);
+    expect(JSON.stringify(first)).not.toContain("15 Oktober 2026");
+
+    const retried = await runConsolidation(
+      { repo, extractLocal: extractor },
+      { now: NOW, projectId },
+    );
+    expect(retried).toMatchObject({ processed: 1, promoted: 2, rejected: 1, errors: [] });
+    expect(repo.listFacts({ projectId }).map((fact) => fact.object).sort()).toEqual([
+      "30 November 2026",
+      "BINTANG-205",
+      "Dimas",
+    ]);
+    expect(repo.getEpisode(assertId("episode", "epi_literal"))?.consolidatedAt).toBe(NOW);
+    expect(extractor).toHaveBeenCalledTimes(2);
+  });
+
+  it("refuses invented identity and code literals but leaves semantic preferences unchanged", async () => {
+    const { repo } = makeRepo();
+    repo.appendEpisode(
+      episodeInput({ id: "epi_anchor", rawText: "Kode final BIRU-742, pemilik proyek Dimas." }),
+    );
+    const extractLocal = vi.fn().mockResolvedValue(
+      JSON.stringify({
+        facts: [
+          {
+            subject: "proyek",
+            predicate: "code",
+            object: "MERAH-999",
+            confidence: 1,
+            worthRemembering: true,
+          },
+          {
+            subject: "proyek",
+            predicate: "owner",
+            object: "Rina",
+            confidence: 1,
+            worthRemembering: true,
+          },
+          {
+            subject: "proyek",
+            predicate: "preferensi",
+            object: "disukai",
+            confidence: 1,
+            worthRemembering: true,
+          },
+        ],
+        summaries: [],
+      }),
+    );
+    const result = await runConsolidation({ repo, extractLocal }, { now: NOW });
+    expect(result.errors).toEqual(["SOURCE_LITERAL_MISMATCH", "SOURCE_LITERAL_MISMATCH"]);
+    expect(result.processed).toBe(0);
+    expect(result.promoted).toBe(1);
+    expect(repo.listFacts().map((f) => f.object)).toEqual(["disukai"]);
+    expect(repo.getEpisode(assertId("episode", "epi_anchor"))?.consolidatedAt).toBeNull();
   });
 
   it("memanggil extractLocal tepat sekali per batch, bukan per episode", async () => {
