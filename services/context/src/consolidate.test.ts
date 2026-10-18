@@ -734,7 +734,7 @@ describe("runConsolidation", () => {
   it("refuses invented identity and code literals but leaves semantic preferences unchanged", async () => {
     const { repo } = makeRepo();
     repo.appendEpisode(
-      episodeInput({ id: "epi_anchor", rawText: "Kode final BIRU-742, pemilik proyek Dimas." }),
+      episodeInput({ id: "epi_anchor", rawText: "Kode final BIRU-742, pemilik proyek Dimas. Saya suka warna biru." }),
     );
     const extractLocal = vi.fn().mockResolvedValue(
       JSON.stringify({
@@ -756,7 +756,7 @@ describe("runConsolidation", () => {
           {
             subject: "proyek",
             predicate: "preferensi",
-            object: "disukai",
+            object: "warna biru",
             confidence: 1,
             worthRemembering: true,
           },
@@ -768,7 +768,7 @@ describe("runConsolidation", () => {
     expect(result.errors).toEqual(["SOURCE_LITERAL_MISMATCH", "SOURCE_LITERAL_MISMATCH"]);
     expect(result.processed).toBe(0);
     expect(result.promoted).toBe(1);
-    expect(repo.listFacts().map((f) => f.object)).toEqual(["disukai"]);
+    expect(repo.listFacts().map((f) => f.object)).toEqual(["warna biru"]);
     expect(repo.getEpisode(assertId("episode", "epi_anchor"))?.consolidatedAt).toBeNull();
   });
 
