@@ -132,12 +132,16 @@ const StablePrefixBodySchema = z.object({
 
 const CompleteBodySchema = z.object({
   target: z.enum(["hosted", "local"]),
+  localTask: z.literal("memory-extraction").optional(),
   prefix: StablePrefixBodySchema,
   dynamicText: z.string(),
   userMessage: z.string().min(1),
   sensitivity: SensitivitySchema,
   operationId: OperationIdSchema,
   now: z.string().datetime({ offset: false }),
+}).refine((body) => body.localTask === undefined || body.target === "local", {
+  message: "Memory extraction hanya mendukung target local.",
+  path: ["localTask"],
 });
 
 const ProviderCanaryBodySchema = z
