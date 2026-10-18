@@ -679,7 +679,8 @@ describe("runConsolidation", () => {
       episodeInput({
         id: "epi_literal",
         projectId,
-        rawText: "Kode eksperimen BINTANG-205, penanggung jawab Dimas, deadline 30 November 2026.",
+        rawText:
+          "Kode eksperimen BINTANG-205, penanggung jawab Dimas, deadline 30 November 2026.",
       }),
     );
     const validCode = {
@@ -728,11 +729,12 @@ describe("runConsolidation", () => {
       { now: NOW, projectId },
     );
     expect(retried).toMatchObject({ processed: 1, promoted: 2, rejected: 1, errors: [] });
-    expect(repo.listFacts({ projectId }).map((fact) => fact.object).sort()).toEqual([
-      "30 November 2026",
-      "BINTANG-205",
-      "Dimas",
-    ]);
+    expect(
+      repo
+        .listFacts({ projectId })
+        .map((fact) => fact.object)
+        .sort(),
+    ).toEqual(["30 November 2026", "BINTANG-205", "Dimas"]);
     expect(repo.getEpisode(assertId("episode", "epi_literal"))?.consolidatedAt).toBe(NOW);
     expect(extractor).toHaveBeenCalledTimes(2);
   });
