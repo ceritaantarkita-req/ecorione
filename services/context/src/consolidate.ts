@@ -128,16 +128,36 @@ function normalize(value: string): string {
 /** Literal anchors cannot be repaired, inferred or reformatted by the extractor.
  * This guard is narrow: unstructured preferences still allow semantic phrasing.
  */
-function needsLiteralEvidence(predicate: string): boolean {
-  return /\b(?:deadline|due(?:\s+date)?|date|tanggal|tenggat|jatuh\s+tempo|target\s+penyelesaian|kode|code|identifier|nomor|owner|penanggung\s+jawab|responsible\s+person)\b/iu.test(
-    predicate,
+function needsLiteralEvidence(predicate: string, value: string): boolean {
+  return (
+    /\b(?:deadline|due(?:\s+date)?|date|tanggal|tenggat|jatuh\s+tempo|target\s+penyelesaian|kode|code|identifier|nomor|owner|penanggung\s+jawab|responsible\s+person)\b/iu.test(
+      predicate,
+    ) ||
+    // Even if a model labels the predicate generically, dates and reference
+    // codes still require an exact source match.
+    /\b\d{4}-\d{2}-\d{2}\b/u.test(value) ||
+    /\b\d{1,2}\s+\p{L}+\s+\d{4}\b/u.test(value) ||
+    /\b[A-Za-z][A-Za-z0-9]*-\d{2,}\b/u.test(value)
   );
 }
 
 function literalValueIsInSource(value: string, sourceText: string): boolean {
-  const normalizedValue = value.replace(/\s+/gu, " ").trim();
-  const normalizedSource = sourceText.replace(/\s+/gu, " ");
-  return normalizedValue.length > 0 && normalizedSource.includes(normalizedValue);
+  const needle = value.replace(/\s+/gu, " ").trim();
+  const haystack = sourceText.replace(/\s+/gu, " ");
+  if (needle.length === 0) return false;
+  // Substring matching alone would accept AURORA-51 inside AURORA-518.
+  // Exact case and alphanumeric boundaries prevent partial fact corruption.
+  const isWord = (char: string): boolean => /[\p{L}\p{N}_]/u.test(char);
+  let at = haystack.indexOf(needle);
+  while (at !== -1) {
+    const before = at === 0 ? "" : haystack[at - 1] ?? "";
+    const after = haystack[at + needle.length] ?? "";
+    if ((before === "" || !isWord(before)) && (after === "" || !isWord(after))) {
+      return true;
+    }
+    at = haystack.indexOf(needle, at + 1);
+  }
+  return false;
 }
 
 export async function runConsolidation(
@@ -236,7 +256,7 @@ export async function runConsolidation(
       // Unsupported dates/codes/owners cannot invalidate existing live facts.
       // The source episode remains pending for an explicit later retry.
       if (
-        needsLiteralEvidence(candidate.predicate) &&
+        needsLiteralEvidence(candidate.predicate, candidate.object) &&
         !literalValueIsInSource(candidate.object, source.rawText)
       ) {
         rejected += 1;
