@@ -709,7 +709,10 @@ describe("runConsolidation", () => {
         }),
       );
 
-    const first = await runConsolidation({ repo, extractLocal: extractor }, { now: NOW, projectId });
+    const first = await runConsolidation(
+      { repo, extractLocal: extractor },
+      { now: NOW, projectId },
+    );
     expect(first).toMatchObject({
       processed: 0,
       promoted: 1,
