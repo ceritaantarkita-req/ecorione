@@ -51,6 +51,7 @@ async function extractLocal(prompt: string): Promise<string> {
     token,
     body: {
       target: "local",
+      localTask: "memory-extraction",
       prefix: {
         systemPrompt:
           "Kamu pengekstrak fakta untuk memori ecorione. Jawab hanya objek JSON valid dengan facts dan summaries sesuai instruksi. Jangan gunakan code fence atau markdown.",
