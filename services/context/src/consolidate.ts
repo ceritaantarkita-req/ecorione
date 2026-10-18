@@ -129,15 +129,19 @@ function normalize(value: string): string {
  * This guard is narrow: unstructured preferences still allow semantic phrasing.
  */
 function needsLiteralEvidence(predicate: string, value: string): boolean {
+  const simple = /\b(?:deadline|due|date|tanggal|tenggat|kode|code|identifier|nomor|owner)\b/iu;
+  const compound = /\b(?:jatuh\s+tempo|target\s+penyelesaian|penanggung\s+jawab|responsible\s+person)\b/iu;
+  const isoDate = /\b\d{4}-\d{2}-\d{2}\b/u;
+  const namedDate = /\b\d{1,2}\s+\p{L}+\s+\d{4}\b/u;
+  const refCode = /\b[A-Za-z][A-Za-z0-9]*-\d{2,}\b/u;
+  // Even if the model labels the predicate generically, literal dates
+  // and reference codes still require an exact source match.
   return (
-    /\b(?:deadline|due(?:\s+date)?|date|tanggal|tenggat|jatuh\s+tempo|target\s+penyelesaian|kode|code|identifier|nomor|owner|penanggung\s+jawab|responsible\s+person)\b/iu.test(
-      predicate,
-    ) ||
-    // Even if a model labels the predicate generically, dates and reference
-    // codes still require an exact source match.
-    /\b\d{4}-\d{2}-\d{2}\b/u.test(value) ||
-    /\b\d{1,2}\s+\p{L}+\s+\d{4}\b/u.test(value) ||
-    /\b[A-Za-z][A-Za-z0-9]*-\d{2,}\b/u.test(value)
+    simple.test(predicate) ||
+    compound.test(predicate) ||
+    isoDate.test(value) ||
+    namedDate.test(value) ||
+    refCode.test(value)
   );
 }
 
