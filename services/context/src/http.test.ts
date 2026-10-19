@@ -213,6 +213,7 @@ describe("aggregate Project Memory diagnostics", () => {
       processing: false,
       queued: false,
       lastAttempt: "unknown",
+      lastFinishedAttemptSequence: 0,
       lastFailureCodes: [],
       lastAttemptDurationMs: null,
       lastExtractionDurationMs: null,
@@ -223,6 +224,84 @@ describe("aggregate Project Memory diagnostics", () => {
     expect((await app.inject({ method: "GET", url: "/v1/memory/status" })).statusCode).toBe(
       400,
     );
+  });
+});
+
+describe("Project Memory attempt identity", () => {
+  it("does not treat the previous verdict as completion of an in-flight chat", async () => {
+    let releaseSecond: ((value: string) => void) | undefined;
+    const extractLocal = vi
+      .fn()
+      .mockResolvedValueOnce("[]")
+      .mockImplementationOnce(
+        () =>
+          new Promise<string>((resolve) => {
+            releaseSecond = resolve;
+          }),
+      );
+    const autoApp = buildContextServer(repo, vectors, {
+      extractLocal,
+      autoConsolidate: true,
+    });
+    const status = async (projectId: string) =>
+      (
+        await autoApp.inject({
+          method: "GET",
+          url: `/v1/memory/status?projectId=${projectId}`,
+        })
+      ).json();
+    const append = async (rawText: string, trust: "USER" | "LOCAL_AGENT") => {
+      const response = await autoApp.inject({
+        method: "POST",
+        url: "/v1/episodes",
+        payload: {
+          ts: NOW,
+          rawText,
+          projectId: "prj_alpha",
+          provenance: { sourceApp: "ai", sessionId: "sess_serial" },
+          scope: "personal",
+          sensitivity: "INTERNAL",
+          syncClass: "LOCAL_ONLY",
+          trust,
+        },
+      });
+      expect(response.statusCode).toBe(201);
+    };
+    try {
+      await append("First user message", "USER");
+      await append("First assistant reply", "LOCAL_AGENT");
+      await vi.waitFor(async () => {
+        expect(await status("prj_alpha")).toMatchObject({
+          lastAttempt: "complete",
+          lastFinishedAttemptSequence: 1,
+          processing: false,
+        });
+      });
+      await append("Second user message", "USER");
+      await append("Second assistant reply", "LOCAL_AGENT");
+      await vi.waitFor(async () => {
+        expect(await status("prj_alpha")).toMatchObject({
+          lastAttempt: "complete",
+          lastFinishedAttemptSequence: 1,
+          processing: true,
+        });
+      });
+      expect(await status("prj_beta")).toMatchObject({
+        lastFinishedAttemptSequence: 0,
+      });
+      releaseSecond?.("[]");
+      await vi.waitFor(async () => {
+        expect(await status("prj_alpha")).toMatchObject({
+          lastAttempt: "complete",
+          lastFinishedAttemptSequence: 2,
+          processing: false,
+        });
+      });
+      expect(extractLocal).toHaveBeenCalledTimes(2);
+    } finally {
+      releaseSecond?.("[]");
+      await autoApp.close();
+    }
   });
 });
 
