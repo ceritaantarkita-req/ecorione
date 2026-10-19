@@ -168,11 +168,7 @@ async function settled(projectId) {
   while (Date.now() < deadline) {
     const status = await json(`${contextUrl}/v1/memory/status?projectId=${projectId}`);
     last = status;
-    if (
-      status.lastFinishedAttemptSequence > since &&
-      !status.processing &&
-      !status.queued
-    ) {
+    if (status.lastFinishedAttemptSequence > since && !status.processing && !status.queued) {
       record("ATTEMPT_FINISHED", {
         projectId,
         sequence: status.lastFinishedAttemptSequence,
