@@ -242,6 +242,9 @@ export function buildContextServer(
   const processingProjects = new Set<ProjectId>();
   const lastOutcome = new Map<ProjectId, "failed" | "complete">();
   const lastFailureCodes = new Map<ProjectId, readonly ConsolidationFailureCode[]>();
+  // Completed-attempt sequence is per Project and never reveals episode content.
+  // Consumers must observe a newer sequence, not a stale previous verdict.
+  const lastFinishedAttemptSequence = new Map<ProjectId, number>();
   let autoRunning = false;
   function scheduleAutoConsolidation(projectId: ProjectId): void {
     if (options.autoConsolidate !== true || options.extractLocal === undefined) return;
@@ -279,6 +282,10 @@ export function buildContextServer(
               "Auto memory consolidation deferred",
             );
           } finally {
+            lastFinishedAttemptSequence.set(
+              next,
+              (lastFinishedAttemptSequence.get(next) ?? 0) + 1,
+            );
             processingProjects.delete(next);
           }
         }
@@ -298,6 +305,7 @@ export function buildContextServer(
       processing: processingProjects.has(q.projectId),
       queued: pendingProjects.has(q.projectId),
       lastAttempt: lastOutcome.get(q.projectId) ?? "unknown",
+      lastFinishedAttemptSequence: lastFinishedAttemptSequence.get(q.projectId) ?? 0,
       lastFailureCodes: lastFailureCodes.get(q.projectId) ?? [],
       lastAttemptDurationMs: lastAttemptDurationMs.get(q.projectId) ?? null,
       lastExtractionDurationMs: lastExtractionDurationMs.get(q.projectId) ?? null,
