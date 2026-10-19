@@ -169,3 +169,65 @@ No GPU or live SQLite database was accessed from this GitHub-only patch.
 No paid model API, deployment, database reset, or merge was performed.
 The PR is still **DRAFT / NOT READY TO MERGE** until authorized real-local
 Qwen/Hermes and original-UI acceptance pass.
+
+
+## 19 October — cloud-only handoff and new-attempt identity
+
+The operator reported that repeated Codex/Desktop GPU runs caused the laptop to
+shut down. **Do not attempt further heavy local acceptance on that machine.**
+This is not proof of a software/model PASS or FAIL; the observed runs were
+interrupted before returning a complete verdict.
+
+A GitHub-hosted **CPU** smoke experiment with smaller Qwen/Hermes variants was
+attempted, but its model workflow did not produce a verifiable run or a model
+verdict. All temporary workflow files/jobs were removed and canonical
+`.github/workflows/ci.yml` restored exactly; PR checks were green at cleanup
+head `2bd29d2`. Do **not** treat these CI checks as real inference evidence.
+
+### Acceptance-harness race fix
+
+Status `GET /v1/memory/status?projectId=...` now includes the **ephemeral**
+nonnegative integer `lastFinishedAttemptSequence`, initialized to 0 for a
+Project in each Context server process. After each automatically scheduled
+attempt **finishes**, whether successful or failed, its Project's sequence
+increments. It is not an episode count or a durable DB counter. It contains no
+raw memories, prompts, provider responses, or sensitive identifiers.
+
+The isolated harness now records that sequence **before** each chat, and its
+`settled(projectId)` requires a strictly newer finished sequence plus no
+active/queued work. Previously it could mistakenly accept the prior chat's
+`lastAttempt="complete"` or `"failed"` while the latest extraction had not yet
+started or completed. A synthetic regression holds a second extractor open and
+checks that the prior success still has sequence 1 until the second finishes.
+This improves verdict attribution only; it cannot speed up Qwen or certify
+Hermes answers.
+
+### Remote GPU execution boundary — not yet performed
+
+For full model evidence without a laptop, use only a **separately authorized**
+GPU machine with sufficient verified VRAM/RAM/disk for both chosen model
+variants. Provisioning cost, provider credentials and GPU access must be
+approved before use. Do not introduce silent cloud-model substitution.
+
+- Clone the PR's exact head onto the **temporary remote GPU host** and record
+  commit SHA, pinned model names/digests, Ollama version, memory/VRAM and the
+  availability of model artifacts. Follow the repository's Node/pnpm lockfile.
+- Run native Ollama bound to loopback (`127.0.0.1:11434`) with one model loaded
+  at a time; reject exposed inference ports and disable hosted paid calls.
+- Use **only generated synthetic Project QA messages**, the isolated SQLite
+  files created by `scripts/project-memory-local-acceptance.mjs`, and the
+  explicit command:
+  `node --import tsx scripts/project-memory-local-acceptance.mjs qwen3.5:9b hermes3:latest`.
+  Confirm model identities before invoking; no automatic download/alias
+  substitution inside the harness.
+- Collect status sequence, extraction latency, prompt bytes, fact provenance,
+  exact direct/paraphrased answers, per-Project isolation, persistence, retry
+  and CLOUD_ALLOWED/LOCAL_ONLY boundaries. Keep any raw prompt/logs private
+  and excluded from Git.
+- Report **PASS/FAIL/BLOCKED per case**, distinguishing model/hardware failure
+  from service failure. Synthetic remote GPU PASS does **not** satisfy the
+  operator's outstanding original-UI acceptance. No production database,
+  LOCAL_ONLY user records or backups may be uploaded to any third-party host.
+
+Until the GPU is authorized and the above acceptance completed, PR #467 stays
+**DRAFT / NOT READY TO MERGE**.
