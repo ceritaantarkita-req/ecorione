@@ -205,6 +205,19 @@ describe("Context maintenance / rebuild engine", () => {
     expect(repo.getEpisode(episodeId)?.summary).toBe("User likes black coffee.");
   });
 
+  it("preserves live L1 when staging extraction fails before processing any episode", async () => {
+    const { repo, maintenance } = setup({ extractLocal: async () => "invalid JSON" });
+    seedDuplicateFacts(repo, seedEpisode(repo));
+    const before = contextProjectionDigest(repo);
+    const plan = maintenance.plan({
+      operationId: assertId("operation", "op_failedrebuild"),
+      actions: ["rebuild-l1", "verify"],
+      now: NOW,
+    });
+    await expect(maintenance.execute(plan)).rejects.toThrow("INVALID_JSON");
+    expect(contextProjectionDigest(repo)).toBe(before);
+  });
+
   it("refuses projection rollback after immutable L0 advances", async () => {
     const { repo, maintenance } = setup();
     const episodeId = seedEpisode(repo);

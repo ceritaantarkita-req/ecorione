@@ -21,24 +21,33 @@ export const ChatContextConstraintSchema = BrainContextConstraintSchema.extend({
 }).strict();
 export type ChatContextConstraint = z.infer<typeof ChatContextConstraintSchema>;
 
-export const ChatRequestSchema = z.object({
-  sessionId: SessionIdSchema,
-  workspaceId: WorkspaceIdSchema.optional(),
-  projectId: ProjectIdSchema.optional(),
-  message: z.string().min(1).max(16_000),
-  /** Explicit route selection. Omitted requests retain the historical hosted default. */
-  target: z.enum(["hosted", "local"]).optional(),
-  scope: ScopeSchema.default("personal"),
-  /** Plafon sensitivitas fakta yang boleh ikut ditarik ke konteks giliran ini. */
-  maxSensitivity: SensitivitySchema.default("INTERNAL"),
-  /**
-   * Optional fail-closed retrieval narrowing for an embedded Brain turn.
-   * This can only remove Context candidates; normal Project/scope/sensitivity authorization still applies.
-   */
-  contextConstraint: ChatContextConstraintSchema.optional(),
-  /** Chat adalah aksi `READ` — level ini disiapkan untuk giliran yang nanti memicu tool. */
-  autonomy: AutonomyLevelSchema.default("L1"),
-});
+export const ChatRequestSchema = z
+  .object({
+    sessionId: SessionIdSchema,
+    workspaceId: WorkspaceIdSchema.optional(),
+    projectId: ProjectIdSchema.optional(),
+    message: z.string().min(1).max(16_000),
+    /** Explicit route selection. Omitted requests retain the historical hosted default. */
+    target: z.enum(["hosted", "local"]).optional(),
+    /** Per-message consent: user permits a LOCAL turn to be classified CLOUD_ALLOWED
+     * for later hosted retrieval. Never applies retroactively to prior LOCAL_ONLY data.
+     */
+    cloudShare: z.boolean().optional(),
+    scope: ScopeSchema.default("personal"),
+    /** Plafon sensitivitas fakta yang boleh ikut ditarik ke konteks giliran ini. */
+    maxSensitivity: SensitivitySchema.default("INTERNAL"),
+    /**
+     * Optional fail-closed retrieval narrowing for an embedded Brain turn.
+     * This can only remove Context candidates; normal Project/scope/sensitivity authorization still applies.
+     */
+    contextConstraint: ChatContextConstraintSchema.optional(),
+    /** Chat adalah aksi `READ` — level ini disiapkan untuk giliran yang nanti memicu tool. */
+    autonomy: AutonomyLevelSchema.default("L1"),
+  })
+  .refine((input) => input.cloudShare !== true || input.target === "local", {
+    message: "Cloud sharing hanya berlaku untuk permintaan Local yang disetujui pengguna.",
+    path: ["cloudShare"],
+  });
 export type ChatRequest = z.infer<typeof ChatRequestSchema>;
 
 export const MemoryUsedFactSchema = z.object({

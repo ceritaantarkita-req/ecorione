@@ -8,7 +8,27 @@ const LIVE_REQUEST_NOTE =
 const LOCAL_REASONING_EFFORTS = new Set(["none", "low", "medium", "high", "max"]);
 type LocalReasoningEffort = "none" | "low" | "medium" | "high" | "max";
 
+export type LocalTask = "memory-extraction";
+
+export const MEMORY_EXTRACTION_MAX_OUTPUT_TOKENS = 768;
+
+/** A small, deterministic local-only task; regular chat settings are unchanged. */
+export function localTaskControls(
+  task: LocalTask | undefined,
+  env: NodeJS.ProcessEnv = process.env,
+): LocalGenerationControls {
+  if (task === "memory-extraction") {
+    return {
+      max_tokens: MEMORY_EXTRACTION_MAX_OUTPUT_TOKENS,
+      temperature: 0,
+      reasoning_effort: "none",
+    };
+  }
+  return localGenerationControls(env);
+}
+
 export interface LocalCallInput {
+  readonly localTask?: LocalTask | undefined;
   readonly baseUrl: string;
   readonly modelTag: string;
   readonly prefix: StablePrefix;
@@ -105,10 +125,11 @@ export async function callLocal(
   input: LocalCallInput,
   signal?: AbortSignal,
 ): Promise<LocalCallResult> {
+  const controls = localTaskControls(input.localTask);
   const body = {
     model: input.modelTag,
     messages: localChatMessages(input),
-    ...localGenerationControls(),
+    ...controls,
   };
   let res: Response;
   try {

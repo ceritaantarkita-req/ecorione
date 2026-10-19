@@ -1,0 +1,299 @@
+# Project memory cross-session — implementation checkpoint (2026-10-14)
+
+**Latest:** see the 2026-10-15 independent read-only audit and isolated real-model
+acceptance section at the end. Earlier failures and screenshots below are historical
+evidence, not a replacement for the latest measured boundary.
+
+## Reported symptom
+
+In local ECORIONE, the user wrote a memorable marker in `QA-Audit`, received the expected answer in the same conversation, but a new conversation under the same Project did not recall it. The Memory sidebar also showed no derived memory.
+
+## Confirmed code path on prior main
+
+- Hub persists USER and agent replies to Context `/v1/episodes`.
+- Hub's retrieval on the next turn reads `/v1/retrieve` (derived L1 facts) and reads episodic summaries **only by the current `sessionId`**.
+- Context already had `/v1/consolidate/run`, but production chat did not invoke it automatically.
+- Invalid JSON extraction previously set `consolidated_at` anyway, permanently suppressing L1 retries.
+
+## Proposed repair on this branch
+
+1. Once Context has durably received the agent's episode for a real Project, enqueue one nonblocking, bounded local-model consolidation batch for that Project. The response to the chat is not contingent on extraction succeeding.
+2. Serialize automatic and operator-triggered consolidation to avoid duplicate concurrent promotion.
+3. Only USER episodes can be promoted into durable facts; assistant episodes may still receive episodic summaries.
+4. Candidate deduplication stays within the fact's own Project and cannot mutate global memory.
+5. Invalid extractor JSON leaves episodes unconsolidated and retryable. Local extraction runs via Connect with a 60-second request timeout and strict JSON instructions.
+6. Existing `GLOBAL_PLUS_PROJECT`, sensitivity, and `CLOUD_ALLOWED` retrieval filters remain unchanged.
+
+## Runtime dependency and privacy boundary
+
+- Memory extraction is **local-only** by the existing Context/Connect contract (`target: "local"`); it does **not** automatically fall back to OpenRouter/hosted. A green OpenRouter canary proves chat connectivity, **not** successful memory consolidation.
+- The local model configured in **Settings → Local AI** must be reachable and pass its own local canary for automatic L1 facts to materialize. Without it, episode/History writes still succeed, but Memory may remain empty; startup or next-turn backfill cannot be claimed until demonstrated.
+- This preserves the explicit restriction in `docs/api-fase1.md`: no silent hosted-data egress and no unexpected extra hosted API spend. Cloud-eligible derived facts can be recalled by hosted chat only **after** local extraction succeeds and their `syncClass` passes hosted eligibility.
+- Background failures now log only a Project ID, error type, or bounded count, never exception payloads that may include model output. Raw episodes stay eligible for retries.
+
+## 2026-10-15: local-runtime investigation and Project diagnostics
+
+- `services/context/src/consolidate.ts` accepts strictly JSON-compatible local extractor replies with a single Markdown JSON fence or one leading `<think>...</think>` block. Malformed or free-form replies remain failures and eligible for retry; no hosted fallback was enabled.
+- `GET /v1/memory/status?projectId=...` exposes per-Project counts only: pending/processed Episodes, active facts, Local Only/Cloud Allowed facts, plus **ephemeral** queued/processing/lastAttempt state. It never returns episode contents or fact text.
+- The same-origin `/api/projects/memory-status` route **first validates Project ownership via Hub** for the active Workspace. The Projects view displays a read-only status panel with a Refresh control.
+- **Important:** `lastAttempt` is in-memory runtime telemetry, not durable after a Context restart. Pending and saved counts come from the persistent Context DB. The panel is an explanation aid, **not** proof that a particular model has retrieved a particular fact.
+- Follow-up browser acceptance: refresh the Project panel after a Local → Local test. If Pending remains nonzero or lastAttempt=failed, investigate the local extractor. If Saved > 0 and the same local chat cannot retrieve it, investigate retrieval/relevance. If facts are Local Only, an OpenRouter chat must not see them.
+- All changes stay in draft PR #467 until CI, local-model runtime verification, Project isolation and restart acceptance are documented.
+
+## 2026-10-15: model-switch Project continuity (local ↔ local / local ↔ hosted)
+
+- Hub **always resolves the active Workspace/Project** for chat. Ordinary Project chat now renders bounded, user-configured **Project name, description, and instructions** in dynamic per-turn context independent of which model handles the turn. These are user preferences, never a substitute for system/policy/tool authority. Brain-grounded constrained turns intentionally do **not** import wider Project instructions.
+- Provider-independent retrieval still assembles only authorized Core Memory, relevant L1 facts, recent same-session episode summaries, and Artifact pointers, preserving budget limits, Project filtering, and the stable cache prefix. System guidance discourages models from denying facts that were already provided to them; output truthfulness remains model-dependent.
+- **Local → Local:** the new model receives current Project settings and eligible saved facts / bounded session summaries; it does not receive a limitless verbatim context window.
+- **Hosted → Local:** cloud-eligible episodes/facts are still accessible locally.
+- **Local → Hosted:** historical `LOCAL_ONLY` messages/facts are **never** silently exported. The default Local send remains Local Only. The chat composer offers a **per-message, unchecked-by-default** opt-in for future Local turns to be stored `CLOUD_ALLOWED`. Explicitly consented turns consult **only cloud-eligible Context inputs**, even while answered by a local model, to avoid laundering earlier private memory into a cloud-visible reply. Local Only messages written before consent remain Local Only. Attachment-bearing messages do not use this opt-in.
+- The local user must deliberately enable sharing for each eligible Local message; it resets after a send, route change, or session change. Switching to OpenRouter still obeys hosted eligibility on each retrieved fact/episode.
+- This achieves **authorized continuity**, not impossible guarantees of zero context loss across arbitrary long histories or incompatible providers. Exact entire-chat replay, retroactive release of local private context, new tool permissions, and model-internal reasoning transfer are **out of scope**.
+
+Acceptance to run before merge:
+1. Local A → Local B in same Project/session: name, instructions, eligible facts and bounded episodic summaries are in model input; new model responds consistently.
+2. Hosted A → Hosted B and Hosted → Local: same Project context and eligible history; previous cloud turns survive.
+3. Local (no consent) → OpenRouter: private contents absent in any outbound `dynamicText` and retrieval response.
+4. Local (explicit Cloud Allowed opt-in) → Hosted: new permitted facts/episodes may be retrieved later, while all prior Local Only facts/episodes stay excluded.
+5. New session same Project retrieves durable L1, sibling Project does not; shutdown/restart retains it. **Real Windows runtime proof still required.**
+
+## Limits / acceptance
+
+- This is **asynchronous and model-dependent**, not guaranteed immediate recall. Do not claim closure until local/CI tests and browser acceptance show a saved fact is recalled after a new conversation.
+- The auto trigger processes **at most 20 pending episodes per Project per assistant reply**; older backlog may require multiple rounds or an authorized targeted `POST /v1/consolidate/run` with `{ "now": "<ISO timestamp>", "projectId": "prj_..." }`.
+- If Local AI / Connect is unavailable, the chat still succeeds; raw episodes remain stored and extraction retries on a later assistant reply or through the authorized operator endpoint. Error logs should not contain user episode bodies.
+- The auto trigger is production opt-in from Context `main.ts`. Unit-test servers remain manual unless `autoConsolidate: true` is supplied.
+- Do not enable direct L0 raw-history injection into prompts as a workaround; follow the Context L1 contract.
+
+## QA checklist
+
+1. Run `pnpm exec vitest run services/context/src/consolidate.test.ts services/context/src/http.test.ts services/context/src/project-memory-persistence.test.ts services/hub/src/project-context.test.ts`.
+2. Run typecheck and lint plus full CI from branch / PR; verify no regressions.
+3. Start local runtime with Connect and a reachable local model; create Project `QA-Memory`.
+4. Ask the agent to remember a unique, harmless test token (no secrets) and wait for async consolidation. Confirm the Context fact exists under the Project (not only Historical Ledger).
+5. Create a new conversation in the **same Project**, ask for the token, and confirm a Memory Fact was recalled and the answer is correct.
+6. Repeat in a **sibling Project**: no token must appear. Repeat with a `LOCAL_ONLY` episode on hosted chat: the token must not cross into cloud context.
+7. Restart Context, then repeat recall. Record the observed result and cleanup test-only data.
+
+**Status:** branch implementation submitted for CI and local browser verification. Local-model readiness and real persistent cross-session recall are **not** verified by GitHub CI alone; do not declare production-ready based solely on unit tests.
+
+## 2026-10-15: operator screenshot review and remaining acceptance gate
+
+Evidence boundary: the operator supplied screenshots of a Windows local `pnpm engine:start` session, the Projects `QA-Memory` surface, and Local/hosted chat examples. These are visual observations, **not** a remotely executed test or independent review of the laptop database.
+
+Observed in supplied screenshots:
+
+- Engine log included successful `GET /healthz` responses (`200`) and a ready Ai Next.js surface at `127.0.0.1:17020`.
+- The selected `QA-Memory` Project displayed policy `GLOBAL_PLUS_PROJECT` and autonomy ceiling `L3`.
+- Its read-only Memory panel reported `Pending episodes: 0`, `Processed episodes: 12`, `Saved facts: 1`, `Local Only: 1`, and `Cloud Allowed: 0`.
+- A Local Qwen answer reproduced the harmless marker `BIRU-742` after a message explicitly named that marker, while admitting it did not have the fuller definition. This demonstrates a **limited local recall observation**, not complete semantic recall.
+- The screenshots do **not** establish successful new-session recall, nonlexical semantic recall, sibling-Project isolation, actual hosted egress filtering, or durable recall after Context restart. They do **not** establish that the saved fact was used in a different model's actual input.
+
+Exact-head GitHub verification before this documentation update: PR #467 at `3c786df159c8b64643de7cd799119c311bea2ef9` had **CI #2951, Product Eval #2190, PCS-06 Browser #559, and MCP HTTPS #1368 SUCCESS**; CI verify, naming and secret-history jobs were successful. Those CI/mock gates cannot substitute for operator-controlled Windows persistence and model-input observations. A new branch head after this documentation edit requires new exact-head gate review.
+
+### Manual operator acceptance matrix — keep private runtime evidence local
+
+| Case | Execution | Pass criteria |
+|---|---|---|
+| A: new session | In QA-Memory/Local create a harmless unique factual statement; wait for `Saved facts` increase, then open **new** conversation under the **same Project** and ask for the exact code | Answer cites the correct value; `memoryUsed.recalledFacts` or equivalent scoped retrieval shows an authorized hit rather than replay of the original session |
+| B: model switch | Repeat in that Project with Local model A then Local model B, with a question that needs a previously saved fact | Both have the same Project identity/instructions; correct relevant fact retrieved without unrestricted replay |
+| C: sibling isolation | Ask for the distinctive marker from sibling QA-Audit Project (without including the marker in the query) | No sibling Project fact enters retrieval/dynamic context; model must not claim private knowledge |
+| D: Local Only → hosted | Save distinct Local Only marker, switch to OpenRouter/hosted, ask a neutral recall question (do **not** put private marker in outbound user prompt) | LOCAL_ONLY raw text, summaries and facts absent from hosted `dynamicText` and request; lack of recall alone is not proof, inspect sanitized route/trace |
+| E: explicit cloud consent | In Local, explicitly opt in for a **different** harmless test message, wait for local fact extraction, then ask via hosted in the same Project | Only new consented `CLOUD_ALLOWED` fact is retrievable; old Local Only facts stay blocked; consent resets on next send |
+| F: persistence | After backing up test DB and checking for active unsaved work, perform a **controlled** Context restart and re-query from a new Project session | Saved fact and its Project/syncClass survive restart, while transient `lastAttempt` may reset |
+| G: paraphrase diagnostic | In same new session, query the fact without sharing its exact token or key terms | Log lexical `hits` / `memoryUsed` separately from model answer: current Phase-1 chat retrieval is **lexical-only by design** (see `docs/api-fase1.md`), so this is a measured limitation, not grounds to silently inject unrestricted L0 history |
+
+For all cases capture: test case ID, local build/ref, Project pseudonym, session boundary, model/provider, before/after Memory counts, eligible retrieval hit IDs and sanitized model input where allowed, and pass/fail. Do **not** commit local DB, credentials, raw model inputs, identifying screenshots, or personal markers to this public repository. Do not change sync classes to make a failed privacy test green.
+
+**Remaining gate:** independent real-Windows A–F acceptance and reviewed current-head security checks before PR #467 is marked ready/merged. Desktop Commander was offline during this review, so no direct remote laptop actions or live-model calls were executed by the reviewer. Main remains unchanged.
+
+## 2026-10-15: privacy-tier correctness repair and verified automated gates
+
+Two concrete defects in the initial draft implementation were corrected on PR #467:
+
+1. **Cross-tier dedupe/supersession:** An older Project fact with matching subject/predicate could swallow or supersede a newly consented fact even if its `syncClass` or `sensitivity` differed. `services/context/src/consolidate.ts` now only deduplicates/supersedes within the same Project, scope, exact sync class and exact sensitivity tier. Explicitly repeated CLOUD_ALLOWED facts can coexist with prior LOCAL_ONLY facts without retroactively changing the original.
+2. **Mixed-policy local extraction:** One local extractor prompt formerly contained USER episodes spanning differing privacy/sensitivity classes (and possibly Projects when the operator ran cross-Project consolidation). It could accidentally attribute information from LOCAL_ONLY or higher-sensitivity input to a lower-class source episode. Local extraction is now grouped by the exact `projectId + scope + sensitivity + syncClass` tuple before prompting. Groups are processed serially; failures preserve only the failed group's episodes for retry. The configured episode limit remains per invocation (at most 20), while distinct policy groups can require more than one **local-only** model call. There is still no hosted extraction fallback.
+
+Deterministic regression coverage added in `services/context/src/consolidate.test.ts` for local/cloud deduplication, sensitivity-preserving supersession, separate extraction prompts, and partially invalid grouped extraction.
+
+Exact-head automated verification **before this documentation/temporary-workflow cleanup**: commit `044713036582b7fa3ffbc0c1a37be07ec4322316` — CI #2959 **SUCCESS** (verify including format, lint, typecheck, tests, real-process acceptance, naming, secret-history), Product Eval #2198 **SUCCESS**, PCS-06 Browser #567 **SUCCESS**, MCP HTTPS #1376 **SUCCESS**. A temporary read-only diagnostic workflow was used to derive exact Prettier changes and is removed by the documentation cleanup commit; it is **not** part of the target PR deliverable.
+
+Remaining acceptance: real operator-controlled Windows/local-model new-session recall, cross-provider eligible context, sibling Project exclusion, consent egress, and restart/persistence checks, as defined above. Automated checks do **not** establish actual laptop database contents, model input or new-session accuracy. PR stays draft and must **not** merge until those checks are independently observed and the final cleanup commit's gates are green.
+
+## 2026-10-15: file-backed restart regression and extractor-outage containment
+
+At the reviewed code head `63e648a5c54f6f112ac58b6c6187df99d98307f8`:
+
+- Added `services/context/src/project-memory-persistence.test.ts`. It writes two harmless Project episodes with different sync classes to a **temporary on-disk SQLite DB**, waits for the local extractor to create durable facts, closes the Context server/DB, opens the same DB through a fresh Context server, and verifies L1 recall while the new chat session has no episodes.
+- Negative checks confirm that the sibling Project cannot retrieve either fact, hosted-eligible retrieval cannot return LOCAL_ONLY facts, and a separately consented CLOUD_ALLOWED fact remains eligible. Post-restart per-Project counts and the expected reset of ephemeral worker telemetry are also asserted.
+- Local extractor promise rejection is now handled **per privacy/sensitivity group**, leaving only that group's episodes pending while other groups may complete; returned errors do not include the model exception payload. A dedicated regression test verifies this behavior.
+- These tests use a deterministic mocked local extractor and a disposable database. They are more realistic than in-memory tests for persistence, but **not proof of real-model semantic recall, cross-provider execution, or Windows laptop runtime behavior**.
+
+GitHub gates for that code head: CI **#2963 SUCCESS** (format, lint, typecheck, tests, real-process acceptance, release/security gates, production build, naming and secret-history); Product Eval **#2202 SUCCESS**; PCS-06 Browser **#571 SUCCESS**; MCP External HTTPS **#1380 SUCCESS**.
+
+The remaining operator-controlled acceptance A–F above is unchanged. To run the deterministic persistence test from a clean checkout of PR #467, use `pnpm exec vitest run services/context/src/project-memory-persistence.test.ts services/context/src/consolidate.test.ts`. This test is safe for the actual laptop's existing Context DB because it uses a newly created temporary SQLite file; it **does not** inspect or validate the existing laptop DB. Real provider/model and local restart acceptance must still be performed separately and recorded before merge. No paid hosted canaries are necessary for the deterministic tests.
+
+## 2026-10-15: real-Qwen runtime failure and privacy-safe diagnostics
+
+The operator's **actual Windows QA-Memory runtime** reproduced a new-chat recall
+failure for the harmless test data `LANGIT-839` / `Raka`. The status panel
+reported pending episodes and a failed consolidation; the Context log showed
+`Auto memory consolidation incomplete` with `errorCount: 1`. This proves
+the extractor did not complete successfully, but **does not identify which
+failure path** occurred and does not justify attributing it to bad JSON yet.
+
+PR #467 now returns allowlisted, privacy-safe `ConsolidationFailureCode` values
+instead of dynamic error messages or model-supplied episode IDs. Automatic
+consolidation logs `failureCodes` and the read-only Project status endpoint
+returns an **ephemeral** `lastFailureCodes` array. The Project Memory UI maps
+these codes to short Indonesian explanations. The codes are:
+
+- `LOCAL_MODEL_ERROR`: local extractor call failed (including timeouts);
+- `INVALID_JSON`: extractor reply was not valid JSON;
+- `INVALID_SCHEMA`: JSON did not match expected facts/summaries shape;
+- `SOURCE_EPISODE_REQUIRED`, `SOURCE_EPISODE_UNKNOWN`, or
+  `SOURCE_EPISODE_UNTRUSTED`: invalid provenance mapping;
+- `PROMOTION_REJECTED`: fact promotion failed validation;
+- `UNEXPECTED_FAILURE`: uncaught internal failure.
+
+The diagnostic fields contain only fixed code strings and counts, **never raw
+chat, model response, exception message, secret, or episode identifier**.
+On a subsequent successful run the last failure codes clear; on Context
+restart they reset to unknown/empty. The persistent episode/fact counts
+remain untouched. Existing retry-on-new-assistant-reply behavior is unchanged,
+and no hosted extractor is added.
+
+Before testing on Windows: wait for exact-head GitHub gates, perform a
+fast-forward-only pull after checking the working tree, then restart the
+operator-controlled engine **without deleting or overwriting the SQLite DB**.
+The prior pending episodes remain candidates for retry; send a harmless local
+follow-up in the same QA-Memory Project to trigger consolidation and refresh
+the Project Memory panel. Record only its status, pending/saved counts and
+safe failure codes. Inspect and fix the real observed category before
+declaring recall successful. **Do not merge PR #467 until this local gate passes.**
+
+## 2026-10-15: independent storage audit, recall repair and real local acceptance
+
+Implementation code: `3cb708d4e53bf1fc3a5a168b82d9cdc0ae2f97ae`, existing
+`fix/context-automatic-consolidation-20261014` branch, draft PR #467. No merge.
+
+### Evidence and root causes
+
+- Read-only SQLite inspection of the operator's QA-Memory Project independently
+  confirmed **18 processed / 0 pending episodes and 4 active LOCAL_ONLY facts**.
+  Three relevant facts contained all three operator-supplied test values. Their
+  source episodes were USER-authored and matched Project, scope, sensitivity and
+  sync class; provenance was `context:consolidate`. The fourth fact was unrelated.
+  No user database was edited, reset, rebuilt or deleted by the audit.
+- Running the existing retriever against that read-only DB found three facts for
+  the exact code, one fact for the person/responsibility question, and three for
+  the explicit code/PIC/deadline question. Assembly retained the expected values.
+  A paraphrase with no overlapping terms returned **zero lexical/vector hits**.
+  Hosted-eligible and sibling-Project requests returned zero private hits.
+  Thus the stored values are present; the historical person-question failure
+  cannot be attributed conclusively to storage or model behavior at its original
+  timestamp. The paraphrase retrieval failure is directly reproduced.
+- A real synthetic Qwen extraction returned valid JSON but omitted the deadline.
+  Saved counts alone therefore do not prove complete extraction. The extraction
+  prompt now requests each explicit fact and gives the complete required JSON
+  shape, including a separate `object`; it forbids inferring facts from questions.
+- Candidate source-mapping or promotion errors formerly acknowledged the entire
+  privacy group anyway. Failed groups now remain retryable; already-promoted
+  valid facts deduplicate on retry. A related rebuild loop checked `processed=0`
+  before checking errors, potentially accepting an empty failed projection.
+  It now fails before replacing live L1. Regression tests preserve live facts.
+- A successful explicit Project consolidation retry now clears stale status
+  failure codes, matching automatic-retry behavior.
+
+### Bounded retrieval change
+
+Ordinary Hub chat opts into `projectFallback`. Only when lexical/vector retrieval
+returns nothing, Context selects authorized, active **current-Project L1** facts
+ranked by salience × confidence × recency, under existing k (default 8) and
+assembly token budgets. Hits are honestly labeled `matchedBy: ["project"]`.
+Global memory is not included in this fallback. Scope, sensitivity, sync class,
+Project, invalidation and Brain constraints remain fail-closed. Brain-grounded
+chat and API callers that do not opt in retain their original behavior.
+
+This is **not semantic/vector search** and does not guarantee arbitrary paraphrase
+recall in a large Project or when a lexical distractor already matched. Existing
+vector support was inspected; there is no query-embedding path in ordinary chat
+and the installed model inventory did not contain an embedding model. No embedding
+service, hosted fallback, model download or dependency was introduced.
+
+### Real-model acceptance boundary
+
+`scripts/project-memory-local-acceptance.mjs` uses synthetic data only, isolated
+Hub/RnD/Connect services, and the real Context production entrypoint in an owned
+child process. Every chat gets a new session. It checks actual Connect input,
+model answers, L1 provenance and privacy, and restarts only its own Context child
+with the same SQLite file, verifying a changed PID. Original runtime data is never
+passed to the harness. Raw evidence stays in ignored `data/memory-acceptance-*`.
+
+Installed identities observed from Ollama:
+
+- Qwen `qwen3.5:9b`, digest `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`.
+- Hermes `hermes3:latest`, digest `4f6b83f30b62bc3d0cf9be09266db222805ee815c8fd7d8b38f863f655be78b7`.
+
+The measured production-entrypoint run uses existing process-local controls:
+`ECORIONE_LOCAL_MAX_TOKENS=768`, `ECORIONE_LOCAL_TEMPERATURE=0`, and
+`ECORIONE_LOCAL_REASONING_EFFORT=none`. The production **60-second** extraction
+and local chat deadlines remain unchanged. These settings were not persisted in
+the user's Settings or environment files.
+
+Preserved failures: an initial local chat returned 502; a Qwen run omitted a
+value despite schema-valid output; a later production-entrypoint extraction hit
+`LOCAL_MODEL_ERROR` under the unbounded default output settings. Hermes recalled
+all three values correctly but did not reliably complete a subsequent extraction
+retry (one observed response omitted required `object`). These failures remain
+local evidence and are not relabeled PASS. The primary-extractor retry case uses
+Qwen; cross-model Hermes acceptance is specifically recall, not universal
+extractor certification.
+
+| Case | Result | Observed boundary |
+|---|---|---|
+| M01 automatic extraction | PASS | Real Qwen stored all three synthetic values in two valid, source-linked L1 triples |
+| M02 exact recall | PASS | New-session answer and actual Connect input contained the expected values |
+| M03 paraphrase recall | PASS | No-marker paraphrase retrieved Project L1 and Qwen answered PIC/deadline correctly |
+| M04 multi-fact recall | PASS | Code, responsible person and date relationships manually checked in synthetic L1 and answers |
+| M05 cross-session | PASS | Every request used a new session; episodic summaries were empty |
+| M06 cross-model local | PASS | Hermes answered using the same saved facts; no re-seeding |
+| M07 Project isolation | PASS | Sibling request had zero recalled facts, no private marker in actual model input/answer |
+| M08 privacy boundary | PASS, bounded | Real Context hosted-eligible retrieval excluded LOCAL_ONLY; deterministic Hub egress/ownership tests passed; no paid hosted call |
+| M09 restart persistence | PASS | New Context process/PID reopened the same SQLite DB; Qwen recalled all values |
+| M10 failure/retry | PASS with Qwen | Injected invalid JSON preserved pending episodes; explicit real Qwen retry returned no failure codes and pending=0; Hermes failure preserved |
+
+Final run completed all M01–M10 assertions successfully on 2026-10-15; completion
+was reviewed on 2026-10-16. Private evidence: `data/memory-live-primary-retry.log`
+and `data/memory-acceptance-s0H9yK/`. This run tests primary Qwen extraction/retry
+before switching to Hermes for cross-model recall. It does not hide or overwrite
+the earlier unsuccessful Hermes extraction runs.
+
+Repeat with installed models only:
+
+```powershell
+$env:ECORIONE_LOCAL_MAX_TOKENS='768'
+$env:ECORIONE_LOCAL_TEMPERATURE='0'
+$env:ECORIONE_LOCAL_REASONING_EFFORT='none'
+node --import tsx scripts/project-memory-local-acceptance.mjs qwen3.5:9b hermes3:latest
+```
+
+### Automated verification and remaining scope
+
+- **PASS:** 377 tests in 72 files covering Context/consolidation/file persistence,
+  Hub chat/assembly/ownership/privacy, Project API routes, shared schema and
+  context assembly. Final focused repair checks: **58 tests / 4 files PASS**.
+- **PASS:** repository TypeScript typecheck, ESLint and Prettier. ESLint retains
+  the existing non-failing Next pages-directory warning.
+- **PASS:** production build in a temporary source snapshot, preserving the live
+  Ai app's `.next` directory. The subsequent prompt-string-only edit is covered by
+  exact-head CI build/typecheck.
+- Code head `3cb708d4...`: **CI #2969 SUCCESS**, Product Eval, MCP External HTTPS,
+  and PCS-06 Browser **SUCCESS**. CI includes full repository checks and build.
+  Evidence/harness documentation follow-up requires its own latest-head checks.
+
+This proves bounded Windows/local acceptance on isolated synthetic state. A full
+restart of the operator's active engine, original-project browser acceptance,
+paid hosted inference, and merge to main were not performed. Saved status is still
+not a guarantee of complete model extraction or semantic relevance. Persistent
+model-format/latency failures remain operator-visible and retryable.

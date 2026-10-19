@@ -128,7 +128,7 @@ export const MAX_RETRIEVAL_K = 20;
 export const RetrievalHitSchema = z.object({
   fact: MemoryFactSchema,
   score: z.number(),
-  matchedBy: z.array(z.enum(["lexical", "vector"])).min(1),
+  matchedBy: z.array(z.enum(["lexical", "vector", "project"])).min(1),
 });
 export type RetrievalHit = z.infer<typeof RetrievalHitSchema>;
 export const RetrievalQuerySchema = z.object({

@@ -6,6 +6,15 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 
 ## Current status — 2026-10-03
 
+**2026-10-18 operator-authorized checkpoint:** Project Memory diagnosis/repair is active
+on draft PR #467 (`fix/context-automatic-consolidation-20261014`). Current evidence:
+[safe resume checkpoint](docs/verification/project-memory-safe-checkpoint-2026-10-18.md).
+SQLite backups and repository checks are recorded. Fresh model runs were interrupted;
+original UI access is blocked and backend work is prioritized. Full acceptance remains
+open after the earlier extraction timeout and Hermes paraphrase error. PR stays draft.
+The Session 12D boundary below remains unchanged; neither PR is authorized to merge
+by this memory task. No active remote staging target is introduced.
+
 Current repository/product boundary:
 
 ```text

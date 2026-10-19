@@ -102,6 +102,8 @@ export interface CompleteDeps {
 }
 export interface CompleteInput {
   readonly target: RouteTarget;
+  /** Only Context requests this deterministic, local-only task. */
+  readonly localTask?: "memory-extraction" | undefined;
   readonly prefix: StablePrefix;
   readonly dynamicText: string;
   readonly userMessage: string;
@@ -229,7 +231,7 @@ export async function complete(
   const modelIdentityProvenance = localIdentity?.provenance ?? "hosted-pinned";
   const allowExactCache = !local || modelIdentityPinned;
   const modelCacheIdentity = local
-    ? `${modelIdentity}:${deps.localBaseUrl}:prompt-v${LOCAL_PROMPT_FRAMING_VERSION}`
+    ? `${modelIdentity}:${deps.localBaseUrl}:prompt-v${LOCAL_PROMPT_FRAMING_VERSION}:task-${input.localTask ?? "chat"}`
     : modelIdentity;
   const key = cacheKey({
     model: modelCacheIdentity,
@@ -261,6 +263,7 @@ export async function complete(
     const result = await callLocalRuntime(
       {
         runtime: deps.localRuntime ?? "openai-compatible",
+        ...(input.localTask === undefined ? {} : { localTask: input.localTask }),
         baseUrl: deps.localBaseUrl,
         modelTag: deps.localModelTag,
         prefix: input.prefix,

@@ -130,15 +130,21 @@ const StablePrefixBodySchema = z.object({
   coreMemory: CoreMemorySchema,
 });
 
-const CompleteBodySchema = z.object({
-  target: z.enum(["hosted", "local"]),
-  prefix: StablePrefixBodySchema,
-  dynamicText: z.string(),
-  userMessage: z.string().min(1),
-  sensitivity: SensitivitySchema,
-  operationId: OperationIdSchema,
-  now: z.string().datetime({ offset: false }),
-});
+const CompleteBodySchema = z
+  .object({
+    target: z.enum(["hosted", "local"]),
+    localTask: z.literal("memory-extraction").optional(),
+    prefix: StablePrefixBodySchema,
+    dynamicText: z.string(),
+    userMessage: z.string().min(1),
+    sensitivity: SensitivitySchema,
+    operationId: OperationIdSchema,
+    now: z.string().datetime({ offset: false }),
+  })
+  .refine((body) => body.localTask === undefined || body.target === "local", {
+    message: "Memory extraction hanya mendukung target local.",
+    path: ["localTask"],
+  });
 
 const ProviderCanaryBodySchema = z
   .object({
@@ -632,11 +638,13 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     });
   }
 
-  app.post("/v1/complete", async (req) => {
+  app.post("/v1/complete", async (req, reply) => {
     const body = parseOrBadRequest(CompleteBodySchema, req.body);
     const controller = new AbortController();
     const abort = (): void => controller.abort();
     req.raw.once("aborted", abort);
+    // A caller deadline usually closes the response after its request body is complete.
+    reply.raw.once("close", abort);
     try {
       const result = await complete(await currentCompletionDeps(), body, controller.signal);
       recordCompletion(body, result);
@@ -645,6 +653,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
       throw toHttpError(err);
     } finally {
       req.raw.off("aborted", abort);
+      reply.raw.off("close", abort);
     }
   });
 

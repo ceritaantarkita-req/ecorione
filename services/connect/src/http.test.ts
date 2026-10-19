@@ -98,6 +98,55 @@ describe("POST /v1/complete", () => {
     await app.close();
   });
 
+  it("rejects extraction-only controls on hosted requests before model dispatch", async () => {
+    const app = buildConnectServer({
+      localRuntime: "ollama",
+      localBaseUrl: "http://127.0.0.1:11434",
+      localModelTag: "qwen3.5:9b",
+      hostedCallsEnabled: false,
+    });
+    try {
+      const invalid = await app.inject({
+        method: "POST",
+        url: "/v1/complete",
+        payload: baseBody({ target: "hosted", localTask: "memory-extraction" }),
+      });
+      expect(invalid.statusCode).toBe(400);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("preserves the extraction purpose through HTTP to Ollama without hosted fallback", async () => {
+    let payload: unknown;
+    localPool.intercept({ path: "/api/chat", method: "POST" }).reply(200, (opts) => {
+      payload = JSON.parse(opts.body as string);
+      return { message: { content: '{"facts":[],"summaries":[]}' }, model: "qwen3.5:9b" };
+    });
+    const app = buildConnectServer({
+      localRuntime: "ollama",
+      localBaseUrl: "http://127.0.0.1:11434",
+      localModelTag: "qwen3.5:9b",
+      hostedCallsEnabled: false,
+    });
+    try {
+      const result = await app.inject({
+        method: "POST",
+        url: "/v1/complete",
+        payload: baseBody({ target: "local", localTask: "memory-extraction" }),
+      });
+      expect(result.statusCode).toBe(200);
+      expect(result.json().provider).toBe("local");
+      expect(payload).toMatchObject({
+        think: false,
+        format: "json",
+        options: { temperature: 0, num_predict: 768 },
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
   it("body tidak valid (userMessage kosong) → 400, bukan 500", async () => {
     const app = buildConnectServer({
       localBaseUrl: "http://127.0.0.1:11434/v1",

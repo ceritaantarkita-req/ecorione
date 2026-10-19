@@ -705,14 +705,14 @@ export class ContextMaintenanceEngine {
           { repo: stagingRepo, extractLocal: this.options.extractLocal },
           { now, limit: 20 },
         );
+        if (result.errors.length > 0) {
+          throw new MaintenanceError(`Staging L1 rebuild gagal: ${result.errors.join(" | ")}`);
+        }
         if (result.processed === 0) break;
         processed += result.processed;
         promoted += result.promoted;
         quarantined += result.quarantined;
         rejected += result.rejected;
-        if (result.errors.length > 0) {
-          throw new MaintenanceError(`Staging L1 rebuild gagal: ${result.errors.join(" | ")}`);
-        }
       }
       return {
         facts: stagingRepo.listFacts({ includeInvalidated: true, limit: MAX_INTERNAL_ROWS }),

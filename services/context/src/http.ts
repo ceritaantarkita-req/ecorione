@@ -5,6 +5,7 @@ import {
   makeId,
   MemoryFactIdSchema,
   ProjectIdSchema,
+  type ProjectId,
   ScopeSchema,
   SensitivitySchema,
   SyncClassSchema,
@@ -21,7 +22,13 @@ import {
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { runConsolidation, type ConsolidateDeps } from "./consolidate.js";
+import {
+  runConsolidation,
+  type ConsolidateDeps,
+  type ConsolidateOptions,
+  type ConsolidationFailureCode,
+} from "./consolidate.js";
+import { nowIso } from "./clock.js";
 import { registerMaintenanceRoutes } from "./maintenance-http.js";
 import { ContextMaintenanceEngine } from "./maintenance.js";
 import {
@@ -80,6 +87,7 @@ const ListEpisodesQuerySchema = z.object({
   sessionId: z.string().optional(),
   projectId: ProjectIdSchema.nullable().optional(),
   scope: ScopeSchema.optional(),
+  maxSensitivity: SensitivitySchema.optional(),
   limit: z.coerce.number().int().min(1).max(200).optional(),
   hostedEligible: BoolQuery,
 });
@@ -123,6 +131,7 @@ const RetrieveBodySchema = z.object({
   maxSensitivity: SensitivitySchema.default("RESTRICTED"),
   now: z.string().datetime({ offset: false }),
   hostedEligibleOnly: z.boolean().default(false),
+  projectFallback: z.boolean().default(false),
   candidateSourceUris: z.array(z.string().url().max(2048)).max(32).optional(),
   candidateFactIds: z.array(MemoryFactIdSchema).max(32).optional(),
 });
@@ -159,6 +168,7 @@ const ListArtifactsQuerySchema = z.object({
 });
 const ConsolidateBodySchema = z.object({
   now: z.string().datetime({ offset: false }),
+  projectId: ProjectIdSchema.optional(),
   limit: z.number().int().min(1).max(200).default(20),
 });
 
@@ -166,6 +176,8 @@ export interface BuildContextServerOptions {
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
   readonly extractLocal?: ((prompt: string) => Promise<string>) | undefined;
+  /** Opt-in for production: queue local L1 extraction once an assistant episode is persisted. */
+  readonly autoConsolidate?: boolean | undefined;
 }
 
 export function buildContextServer(
@@ -180,10 +192,138 @@ export function buildContextServer(
   });
   registerMaintenanceRoutes(app, maintenance);
 
+  // Only the local extractor may derive durable L1 facts. Serialize scheduled and
+  // operator-triggered jobs to avoid processing the same episodes concurrently.
+  let consolidationTail: Promise<void> = Promise.resolve();
+  // Ephemeral, owner-checked performance counters only. Never retain prompts,
+  // model output, source IDs or provider exception text in diagnostics.
+  const lastAttemptDurationMs = new Map<ProjectId, number>();
+  const lastExtractionDurationMs = new Map<ProjectId, number>();
+  const lastExtractionPromptBytes = new Map<ProjectId, number>();
+  const runSerialized = (opts: ConsolidateOptions) => {
+    const originalExtractor = options.extractLocal;
+    if (originalExtractor === undefined) {
+      throw new BadRequestError("Context local extractor belum dikonfigurasi.");
+    }
+    const task = consolidationTail.then(async () => {
+      const started = performance.now();
+      const deps: ConsolidateDeps = {
+        repo,
+        extractLocal: async (prompt) => {
+          const extractStarted = performance.now();
+          try {
+            return await originalExtractor(prompt);
+          } finally {
+            if (opts.projectId !== undefined) {
+              lastExtractionDurationMs.set(
+                opts.projectId,
+                Math.round(performance.now() - extractStarted),
+              );
+              lastExtractionPromptBytes.set(opts.projectId, Buffer.byteLength(prompt, "utf8"));
+            }
+          }
+        },
+      };
+      try {
+        return await runConsolidation(deps, opts);
+      } finally {
+        if (opts.projectId !== undefined) {
+          lastAttemptDurationMs.set(opts.projectId, Math.round(performance.now() - started));
+        }
+      }
+    });
+    consolidationTail = task.then(
+      () => undefined,
+      () => undefined,
+    );
+    return task;
+  };
+  const pendingProjects = new Set<ProjectId>();
+  const processingProjects = new Set<ProjectId>();
+  const lastOutcome = new Map<ProjectId, "failed" | "complete">();
+  const lastFailureCodes = new Map<ProjectId, readonly ConsolidationFailureCode[]>();
+  // Completed-attempt sequence is per Project and never reveals episode content.
+  // Consumers must observe a newer sequence, not a stale previous verdict.
+  const lastFinishedAttemptSequence = new Map<ProjectId, number>();
+  let autoRunning = false;
+  function scheduleAutoConsolidation(projectId: ProjectId): void {
+    if (options.autoConsolidate !== true || options.extractLocal === undefined) return;
+    pendingProjects.add(projectId);
+    if (autoRunning) return;
+    autoRunning = true;
+    void Promise.resolve().then(async () => {
+      try {
+        while (pendingProjects.size > 0) {
+          const next = pendingProjects.values().next().value;
+          if (next === undefined) break;
+          pendingProjects.delete(next);
+          processingProjects.add(next);
+          try {
+            const result = await runSerialized({ now: nowIso(), projectId: next, limit: 20 });
+            const failureCodes = [...new Set(result.errors)];
+            lastOutcome.set(next, failureCodes.length > 0 ? "failed" : "complete");
+            lastFailureCodes.set(next, failureCodes);
+            if (failureCodes.length > 0) {
+              app.log.warn(
+                { projectId: next, errorCount: result.errors.length, failureCodes },
+                "Auto memory consolidation incomplete",
+              );
+            }
+          } catch {
+            lastOutcome.set(next, "failed");
+            lastFailureCodes.set(next, ["UNEXPECTED_FAILURE"]);
+            // Chat succeeds after the episode is durably written; local-model outages
+            // must not turn a completed chat into a retryable 502. Unprocessed
+            // episodes stay in the database for the next attempt/operator run.
+            // Upstream errors may contain snippets of model output or episode text.
+            // Log only the error class, never the exception payload.
+            app.log.warn(
+              { projectId: next, failureCodes: ["UNEXPECTED_FAILURE"] },
+              "Auto memory consolidation deferred",
+            );
+          } finally {
+            lastFinishedAttemptSequence.set(
+              next,
+              (lastFinishedAttemptSequence.get(next) ?? 0) + 1,
+            );
+            processingProjects.delete(next);
+          }
+        }
+      } finally {
+        autoRunning = false;
+      }
+    });
+  }
+
+  // Owner authorization belongs to the Hub/Next boundary. This internal-only
+  // endpoint exposes counts and ephemeral worker state, never fact or episode text.
+  app.get("/v1/memory/status", async (req) => {
+    const q = parseOrBadRequest(z.object({ projectId: ProjectIdSchema }), req.query);
+    return {
+      projectId: q.projectId,
+      ...repo.projectMemoryCounts(q.projectId),
+      processing: processingProjects.has(q.projectId),
+      queued: pendingProjects.has(q.projectId),
+      lastAttempt: lastOutcome.get(q.projectId) ?? "unknown",
+      lastFinishedAttemptSequence: lastFinishedAttemptSequence.get(q.projectId) ?? 0,
+      lastFailureCodes: lastFailureCodes.get(q.projectId) ?? [],
+      lastAttemptDurationMs: lastAttemptDurationMs.get(q.projectId) ?? null,
+      lastExtractionDurationMs: lastExtractionDurationMs.get(q.projectId) ?? null,
+      lastExtractionPromptBytes: lastExtractionPromptBytes.get(q.projectId) ?? null,
+    };
+  });
+
   app.post("/v1/episodes", async (req, reply) => {
     const body = parseOrBadRequest(AppendEpisodeBodySchema, req.body);
     try {
-      return await reply.code(201).send(repo.appendEpisode({ ...body, id: makeId("episode") }));
+      const episode = repo.appendEpisode({ ...body, id: makeId("episode") });
+      if (
+        episode.projectId !== null &&
+        (episode.trust === "LOCAL_AGENT" || episode.trust === "HOSTED_AGENT")
+      ) {
+        scheduleAutoConsolidation(episode.projectId);
+      }
+      return await reply.code(201).send(episode);
     } catch (err) {
       throw toHttpError(err);
     }
@@ -203,6 +343,7 @@ export function buildContextServer(
     return {
       episodes: repo.listEpisodes({
         scopes: q.scope === undefined ? undefined : [q.scope],
+        maxSensitivity: q.maxSensitivity,
         sessionId: q.sessionId,
         projectId: q.projectId ?? null,
         hostedEligibleOnly: q.hostedEligible,
@@ -325,8 +466,13 @@ export function buildContextServer(
         "Service ini dijalankan tanpa client Connect (extractLocal) — konsolidasi tidak bisa jalan.",
       );
     }
-    const deps: ConsolidateDeps = { repo, extractLocal: options.extractLocal };
-    return runConsolidation(deps, body);
+    const result = await runSerialized(body);
+    if (body.projectId !== undefined) {
+      const failureCodes = [...new Set(result.errors)];
+      lastOutcome.set(body.projectId, failureCodes.length > 0 ? "failed" : "complete");
+      lastFailureCodes.set(body.projectId, failureCodes);
+    }
+    return result;
   });
   return app;
 }
