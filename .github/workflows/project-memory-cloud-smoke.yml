@@ -1,9 +1,7 @@
 name: Temporary Project Memory Cloud CPU Smoke
 
 on:
-  push:
-    branches:
-      - fix/context-automatic-consolidation-20261014
+  pull_request:
     paths:
       - .github/workflows/project-memory-cloud-smoke.yml
 
