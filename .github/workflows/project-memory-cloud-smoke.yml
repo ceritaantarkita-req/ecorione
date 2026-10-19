@@ -1,0 +1,68 @@
+name: Temporary Project Memory Cloud CPU Smoke
+
+on:
+  push:
+    branches:
+      - fix/context-automatic-consolidation-20261014
+    paths:
+      - .github/workflows/project-memory-cloud-smoke.yml
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-synthetic-model-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      OLLAMA_VULKAN: "false"
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_KEEP_ALIVE: "0"
+      OLLAMA_MODELS: ${{ runner.temp }}/project-memory-ollama-models
+      ECORIONE_LOCAL_REASONING_EFFORT: "none"
+      ECORIONE_LOCAL_MAX_TOKENS: "768"
+      ECORIONE_LOCAL_TEMPERATURE: "0"
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version-file: ".node-version"
+          cache: pnpm
+      - name: Prepare isolated dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install fixed checksum Ollama on ephemeral runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --retry 2 --fail --location --silent --show-error \
+            "https://github.com/ollama/ollama/releases/download/v0.34.0/ollama-linux-amd64.tar.zst" \
+            -o "$RUNNER_TEMP/ollama-linux-amd64.tar.zst"
+          echo "cf95886728959aa09910bb34de5cca1cc5a8f68003b5597197d3f2c2d57c0804  $RUNNER_TEMP/ollama-linux-amd64.tar.zst" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/ollama"
+          tar --zstd -xf "$RUNNER_TEMP/ollama-linux-amd64.tar.zst" -C "$RUNNER_TEMP/ollama"
+          echo "$RUNNER_TEMP/ollama/bin" >> "$GITHUB_PATH"
+      - name: Start CPU-only Ollama and install small test models
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/ollama/bin/ollama" serve > "$RUNNER_TEMP/ollama-cloud-smoke.log" 2>&1 &
+          for n in $(seq 1 90); do
+            if curl -fsS --max-time 2 http://127.0.0.1:11434/api/tags >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS --max-time 3 http://127.0.0.1:11434/api/tags >/dev/null
+          ollama --version
+          ollama pull qwen3.5:0.8b
+          ollama pull hermes3:3b
+          ollama list
+      - name: Run synthetic isolated memory harness (not 9B or 8B acceptance)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data
+          echo "Cloud CPU synthetic QA with qwen3.5:0.8b and hermes3:3b (NOT laptop acceptance)"
+          node --import tsx scripts/project-memory-local-acceptance.mjs qwen3.5:0.8b hermes3:3b
