@@ -35,6 +35,8 @@ let hubUrl;
 let injectFailure = false;
 const markers = ["AURORA-518", "Dimas", "28 Desember 2026"];
 const observations = [];
+// A settled verdict must belong to this chat, never an earlier request.
+const expectedAttemptSequence = new Map();
 const now = () => new Date().toISOString();
 const projects = new ProjectRegistry(hubDb);
 const projectInput = {
@@ -159,15 +161,42 @@ async function openHub() {
   hubUrl = await listen(hubApp);
 }
 async function settled(projectId) {
+  const since = expectedAttemptSequence.get(projectId);
+  assert(Number.isSafeInteger(since), "Missing baseline for a new Project chat");
   const deadline = Date.now() + 65_000;
+  let last = null;
   while (Date.now() < deadline) {
     const status = await json(`${contextUrl}/v1/memory/status?projectId=${projectId}`);
-    if (!status.processing && !status.queued && status.lastAttempt !== "unknown") return status;
+    last = status;
+    if (
+      status.lastFinishedAttemptSequence > since &&
+      !status.processing &&
+      !status.queued
+    ) {
+      record("ATTEMPT_FINISHED", {
+        projectId,
+        sequence: status.lastFinishedAttemptSequence,
+        lastAttempt: status.lastAttempt,
+        pendingEpisodes: status.pendingEpisodes,
+        extractionMs: status.lastExtractionDurationMs,
+        promptBytes: status.lastExtractionPromptBytes,
+      });
+      return status;
+    }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  throw new Error("Consolidation deadline exceeded");
+  record("ATTEMPT_TIMEOUT", {
+    projectId,
+    baselineSequence: since,
+    lastSeenSequence: last?.lastFinishedAttemptSequence ?? null,
+    processing: last?.processing ?? null,
+    queued: last?.queued ?? null,
+  });
+  throw new Error("New consolidation attempt did not finish within 65s");
 }
 async function chat(message, projectId = project.id, cloudShare = false) {
+  const before = await json(`${contextUrl}/v1/memory/status?projectId=${projectId}`);
+  expectedAttemptSequence.set(projectId, before.lastFinishedAttemptSequence);
   const result = await json(`${hubUrl}/v1/chat`, {
     message,
     projectId,
